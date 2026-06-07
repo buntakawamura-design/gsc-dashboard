@@ -87,7 +87,7 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
 
 /* ── Chart heights ── */
 #chartTrend{height:185px;}
-#chartBrand{height:205px;}
+#chartBrand{height:230px;}
 #chartIP{height:192px;}
 #chartRegion{height:172px;}
 #chartSegment{height:172px;}
@@ -172,7 +172,9 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
         <div id="chartTrend"></div>
       </div>
       <div class="card">
-        <div class="ctitle"><span class="chl">ブランド別 売上実績 vs 目標</span><span class="ctag" id="tagBrand">億円</span></div>
+        <div class="ctitle"><span class="chl">ブランド別 売上実績 vs 目標</span><span class="ctag" id="tagBrand">億円</span>
+          <span id="btnBrandSplit" onclick="toggleBrandSplit()" style="margin-left:8px;cursor:pointer;font-size:10px;padding:2px 7px;border-radius:10px;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;">初版/再販</span>
+        </div>
         <div id="chartBrand"></div>
       </div>
       <div class="btm">
@@ -316,15 +318,17 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
 const DATA = {
   sales:{years:['2021','2022','2023','2024','2025','2026','2027','2028'],actual:[null,6.0,165.3,221.9,220.0,167.7,null,null],plan:[null,null,null,null,230,250,null,null],target:[null,null,null,null,null,null,317,400]},
   brands:[
-    {name:'ねんどろいど', fy25:71.6,fy27:90.2,fy28:105,mult:'1.47x'},
-    {name:'スケール',     fy25:46.2,fy27:61.1,fy28:80, mult:'1.73x'},
-    {name:'メカスマ',     fy25:35.1,fy27:56.0,fy28:65, mult:'1.85x'},
-    {name:'POP UP PARADE',fy25:30.4,fy27:37.3,fy28:45, mult:'1.48x'},
-    {name:'ぬいぐるみ',   fy25:17.7,fy27:22.1,fy28:30, mult:'1.69x'},
-    {name:'Hello!',       fy25:11.6,fy27:9.7, fy28:15, mult:'1.29x'},
-    {name:'くじ',         fy25:5.1, fy27:8.0, fy28:14, mult:'2.74x'},
-    {name:'figma',        fy25:1.2, fy27:14.6,fy28:22, mult:'18.3x'},
-    {name:'ブラインドBOX', fy25:3.4, fy27:12.3,fy28:18, mult:'5.3x'},
+    // fy23/fy24/fy25: IP毎全実績_過去5年.xlsx（会計年度ベース）, shin/sai%: GSCラインナップ master 260410 会計年度fy26比率
+    {name:'ねんどろいど',    fy23:74.1,fy24:89.2,fy25:70.6,fy27:90.2,fy28:105,mult:'1.47x',shin:79,sai:21},
+    {name:'スケール',        fy23:23.7,fy24:37.0,fy25:45.1,fy27:61.1,fy28:80, mult:'1.73x',shin:68,sai:32},
+    {name:'メカスマ',        fy23:24.5,fy24:35.2,fy25:30.5,fy27:56.0,fy28:65, mult:'1.85x',shin:87,sai:13},
+    {name:'POP UP PARADE',   fy23:25.8,fy24:32.0,fy25:30.4,fy27:37.3,fy28:45, mult:'1.48x',shin:89,sai:11},
+    {name:'ぬいぐるみ',      fy23:2.3, fy24:7.3, fy25:17.7,fy27:22.1,fy28:30, mult:'1.69x',shin:82,sai:18},
+    {name:'ねんどろいどどーる',fy23:4.0,fy24:7.7, fy25:5.8, fy27:null,fy28:null,mult:'--',  shin:87,sai:13},
+    {name:'Hello!',          fy23:1.1, fy24:1.8, fy25:3.5, fy27:9.7, fy28:15, mult:'1.29x',shin:70,sai:30},
+    {name:'くじ',            fy23:1.4, fy24:0.8, fy25:3.4, fy27:8.0, fy28:14, mult:'2.74x',shin:70,sai:30},
+    {name:'figma',           fy23:null,fy24:1.8, fy25:1.2, fy27:14.6,fy28:22, mult:'18.3x',shin:100,sai:0},
+    {name:'ブラインドBOX',   fy23:2.8, fy24:3.3, fy25:2.2, fy27:12.3,fy28:18, mult:'5.3x', shin:100,sai:0},
   ],
   ips:[
     {name:'初音ミク',            fy24:10.01,fy25:19.33,delta:9.32},
@@ -362,7 +366,7 @@ const SEG_BRAND = {
   'フィギュア': ['ねんどろいど','スケール','figma','POP UP PARADE'],
   'ぬいぐるみ': ['ぬいぐるみ'],
   'プラモデル': ['メカスマ'],
-  'ドール':     ['Hello!'],
+  'ドール':     ['Hello!','ねんどろいどどーる'],
   'トイ':       ['くじ','ブラインドBOX'],
 };
 
@@ -398,23 +402,60 @@ function renderTrend() {
   });
 }
 
+let brandSplitMode = false;
+function toggleBrandSplit() {
+  brandSplitMode = !brandSplitMode;
+  const btn = document.getElementById('btnBrandSplit');
+  if (btn) {
+    btn.style.background = brandSplitMode ? '#dbeafe' : '#f1f5f9';
+    btn.style.color = brandSplitMode ? '#1d4ed8' : '#64748b';
+    btn.style.border = brandSplitMode ? '1px solid #93c5fd' : '1px solid #e2e8f0';
+  }
+  renderBrand();
+}
 function renderBrand() {
   const brands = [...filtBrands()].sort((a,b)=>b.fy25-a.fy25);
   const lbl = F.brand||F.segment||null;
   const tag = document.getElementById('tagBrand');
   tag.textContent = lbl||'億円'; tag.className='ctag'+(lbl?' on':'');
-  C.brand.setOption({
-    grid:{top:24,right:10,bottom:6,left:96},
-    legend:{top:0,right:0,textStyle:{fontSize:9},itemWidth:10,itemHeight:7,data:['2025年実績','2027年目標','2028年目標']},
-    xAxis:{type:'value',axisLabel:{fontSize:9,color:'#94a3b8',formatter:v=>v+'億'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
-    yAxis:{type:'category',data:brands.map(b=>b.name),axisLabel:{fontSize:10,color:'#374151'}},
-    tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...TOOLTIP},
-    series:[
-      {name:'2025年実績',type:'bar',data:brands.map(b=>b.fy25),barMaxWidth:11,itemStyle:{color:'#3b82f6',borderRadius:2}},
-      {name:'2027年目標',type:'bar',data:brands.map(b=>b.fy27),barMaxWidth:11,itemStyle:{color:'#93c5fd',borderRadius:2}},
-      {name:'2028年目標',type:'bar',data:brands.map(b=>b.fy28),barMaxWidth:11,itemStyle:{color:'#dbeafe',borderRadius:2}},
-    ]
-  },true);
+  if (brandSplitMode) {
+    // 初版/再販分割モード
+    C.brand.setOption({
+      grid:{top:24,right:10,bottom:6,left:96},
+      legend:{top:0,right:0,textStyle:{fontSize:9},itemWidth:10,itemHeight:7,
+        data:['初版（2025年）','再販（2025年）','2027年目標','2028年目標']},
+      xAxis:{type:'value',axisLabel:{fontSize:9,color:'#94a3b8',formatter:v=>v+'億'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+      yAxis:{type:'category',data:brands.map(b=>b.name),axisLabel:{fontSize:10,color:'#374151'}},
+      tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...TOOLTIP},
+      series:[
+        {name:'初版（2025年）',type:'bar',stack:'fy25',
+          data:brands.map(b=>+(b.fy25*(b.shin??70)/100).toFixed(1)),
+          barMaxWidth:11,itemStyle:{color:'#2563eb',borderRadius:[2,0,0,2]}},
+        {name:'再販（2025年）',type:'bar',stack:'fy25',
+          data:brands.map(b=>+(b.fy25*(b.sai??30)/100).toFixed(1)),
+          barMaxWidth:11,itemStyle:{color:'#f97316',borderRadius:[0,2,2,0]}},
+        {name:'2027年目標',type:'bar',data:brands.map(b=>b.fy27),barMaxWidth:11,itemStyle:{color:'#93c5fd',borderRadius:2}},
+        {name:'2028年目標',type:'bar',data:brands.map(b=>b.fy28),barMaxWidth:11,itemStyle:{color:'#dbeafe',borderRadius:2}},
+      ]
+    },true);
+  } else {
+    // 通常モード（fy23/fy24/fy25 実績 + 目標）
+    C.brand.setOption({
+      grid:{top:24,right:10,bottom:6,left:96},
+      legend:{top:0,right:0,textStyle:{fontSize:9},itemWidth:10,itemHeight:7,
+        data:['2023年実績','2024年実績','2025年実績','2027年目標','2028年目標']},
+      xAxis:{type:'value',axisLabel:{fontSize:9,color:'#94a3b8',formatter:v=>v+'億'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+      yAxis:{type:'category',data:brands.map(b=>b.name),axisLabel:{fontSize:10,color:'#374151'}},
+      tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...TOOLTIP},
+      series:[
+        {name:'2023年実績',type:'bar',data:brands.map(b=>b.fy23??null),barMaxWidth:7,itemStyle:{color:'#bfdbfe',borderRadius:2}},
+        {name:'2024年実績',type:'bar',data:brands.map(b=>b.fy24??null),barMaxWidth:9,itemStyle:{color:'#60a5fa',borderRadius:2}},
+        {name:'2025年実績',type:'bar',data:brands.map(b=>b.fy25),barMaxWidth:11,itemStyle:{color:'#2563eb',borderRadius:2}},
+        {name:'2027年目標',type:'bar',data:brands.map(b=>b.fy27),barMaxWidth:11,itemStyle:{color:'#86efac',borderRadius:2}},
+        {name:'2028年目標',type:'bar',data:brands.map(b=>b.fy28),barMaxWidth:11,itemStyle:{color:'#dcfce7',borderRadius:2}},
+      ]
+    },true);
+  }
 }
 
 function renderBrandRank(overrideBrands, highlightName) {
@@ -629,7 +670,7 @@ function renderSummaryDrivers() {
 }
 
 function renderSummaryBrand() {
-  const brands=[...DATA.brands].sort((a,b)=>(b.fy28-b.fy25)-(a.fy28-a.fy25));
+  const brands=[...DATA.brands].filter(b=>b.fy28!=null).sort((a,b)=>(b.fy28-b.fy25)-(a.fy28-a.fy25));
   C.summaryBrand.setOption({
     grid:{top:4,right:130,bottom:6,left:105},
     xAxis:{type:'value',axisLabel:{fontSize:9,color:'#94a3b8',formatter:v=>v+'億'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
@@ -861,7 +902,7 @@ function applyDrill(type, name) {
   // ⑧ SummaryBrandチャート連動
   try {
     if (type === 'brand' && C.summaryBrand) {
-      const brands = [...DATA.brands].sort((a,b)=>(b.fy28-b.fy25)-(a.fy28-a.fy25));
+      const brands = [...DATA.brands].filter(b=>b.fy28!=null).sort((a,b)=>(b.fy28-b.fy25)-(a.fy28-a.fy25));
       C.summaryBrand.setOption({series:[
         {data: brands.map(b=>({value:b.fy25, itemStyle:{color: b.name===name?'#3b82f6':'rgba(59,130,246,0.2)'}}))},
         {data: brands.map(b=>({value:+(b.fy28-b.fy25).toFixed(1), itemStyle:{color: b.name===name?'#93c5fd':'rgba(191,219,254,0.2)'}}))}
