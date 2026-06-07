@@ -225,7 +225,7 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
         <div class="rkhdr">
           <span></span>
           <span class="rkhcol">ブランド</span>
-          <span class="rkhcol">202027年比 ／ 2028年比</span>
+          <span class="rkhcol">2027年比 ／ 2028年比</span>
           <span class="rkhcol" style="text-align:right;">倍率</span>
         </div>
         <div id="brandRank"></div>
@@ -658,14 +658,14 @@ function applyDrill(type, name) {
       const all = [...filtBrands()].sort((a,b)=>b.fy25-a.fy25);
       C.brand.setOption({
         grid:{top:24,right:10,bottom:6,left:96},
-        legend:{top:0,right:0,textStyle:{fontSize:9},itemWidth:10,itemHeight:7,data:['2025実績','2027目標','2028目標']},
+        legend:{top:0,right:0,textStyle:{fontSize:9},itemWidth:10,itemHeight:7,data:['2025年実績','2027年目標','2028年目標']},
         xAxis:{type:'value',axisLabel:{fontSize:9,color:'#94a3b8',formatter:v=>v+'億'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
         yAxis:{type:'category',data:all.map(b=>b.name),axisLabel:{fontSize:10,color:'#374151'}},
         tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...TOOLTIP},
         series:[
-          {name:'2025実績',type:'bar',barMaxWidth:11,data:all.map(b=>({value:b.fy25,itemStyle:{color:b.name===name?'#3b82f6':'rgba(147,197,253,0.25)',borderRadius:2}}))},
-          {name:'2027目標',type:'bar',barMaxWidth:11,data:all.map(b=>({value:b.fy27,itemStyle:{color:b.name===name?'#93c5fd':'rgba(219,234,254,0.2)',borderRadius:2}}))},
-          {name:'2028目標',type:'bar',barMaxWidth:11,data:all.map(b=>({value:b.fy28,itemStyle:{color:b.name===name?'#dbeafe':'rgba(219,234,254,0.15)',borderRadius:2}}))}
+          {name:'2025年実績',type:'bar',barMaxWidth:11,data:all.map(b=>({value:b.fy25,itemStyle:{color:b.name===name?'#3b82f6':'rgba(147,197,253,0.25)',borderRadius:2}}))},
+          {name:'2027年目標',type:'bar',barMaxWidth:11,data:all.map(b=>({value:b.fy27,itemStyle:{color:b.name===name?'#93c5fd':'rgba(219,234,254,0.2)',borderRadius:2}}))},
+          {name:'2028年目標',type:'bar',barMaxWidth:11,data:all.map(b=>({value:b.fy28,itemStyle:{color:b.name===name?'#dbeafe':'rgba(219,234,254,0.15)',borderRadius:2}}))}
         ]
       }, true);
     } else {
@@ -673,13 +673,13 @@ function applyDrill(type, name) {
       if (blist.length > 0) {
         C.brand.setOption({
           grid:{top:24,right:10,bottom:6,left:96},
-          legend:{top:0,right:0,textStyle:{fontSize:9},itemWidth:10,itemHeight:7,data:['2024実績','2025実績']},
+          legend:{top:0,right:0,textStyle:{fontSize:9},itemWidth:10,itemHeight:7,data:['2024年実績','2025年実績']},
           xAxis:{type:'value',axisLabel:{fontSize:9,color:'#94a3b8',formatter:v=>v+'億'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
           yAxis:{type:'category',data:blist.map(b=>b.name),axisLabel:{fontSize:10,color:'#374151'}},
           tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...TOOLTIP},
           series:[
-            {name:'2024実績',type:'bar',barMaxWidth:11,data:blist.map(b=>b.fy24),itemStyle:{color:'#93c5fd',borderRadius:2}},
-            {name:'2025実績',type:'bar',barMaxWidth:11,
+            {name:'2024年実績',type:'bar',barMaxWidth:11,data:blist.map(b=>b.fy24),itemStyle:{color:'#93c5fd',borderRadius:2}},
+            {name:'2025年実績',type:'bar',barMaxWidth:11,
              data:blist.map(b=>({value:b.fy25,itemStyle:{color:(b.delta||0)>=0?'#3b82f6':'#94a3b8',borderRadius:2}})),
              label:{show:true,position:'right',fontSize:8,formatter:p=>{const v=blist[p.dataIndex];return `${(v.delta||0)>=0?'+':''}${(v.delta||0).toFixed(1)}`;},color:'#1e293b'}}
           ]
