@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GSC実績ダッシュボード</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:12px;background:#f0f2f5;color:#1e293b;}
+
+/* ── Header ── */
+.hd{background:#0f172a;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:200;}
+.logo{display:flex;align-items:center;gap:10px;}
+.lmark{width:30px;height:30px;background:#e74c3c;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff;letter-spacing:-1px;}
+.ltext{font-size:13px;font-weight:700;color:#fff;}
+.lsub{font-size:9px;color:#475569;margin-top:1px;}
+.tabs{display:flex;}
+.tab{padding:0 18px;height:46px;display:flex;align-items:center;font-size:11px;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;user-select:none;}
+.tab:hover{color:#94a3b8;}
+.tab.active{color:#fff;border-color:#e74c3c;}
+.hdinfo{font-size:10px;color:#334155;}
+
+/* ── Filter bar ── */
+.fb{background:#fff;height:42px;display:flex;align-items:center;padding:0 20px;gap:10px;border-bottom:1px solid #e2e8f0;}
+.fl{font-size:9px;color:#94a3b8;font-weight:700;text-transform:uppercase;white-space:nowrap;}
+.fs{padding:3px 22px 3px 8px;border:1px solid #e2e8f0;border-radius:4px;font-size:11px;color:#374151;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394a3b8'/%3E%3C/svg%3E") right 7px center/7px no-repeat #fff;
+  appearance:none;cursor:pointer;transition:border-color .15s;}
+.fs:focus{outline:none;border-color:#3b82f6;}
+.fs.on{border-color:#3b82f6;background-color:#eff6ff;color:#1d4ed8;font-weight:600;}
+.fdiv{width:1px;height:20px;background:#e2e8f0;margin:0 3px;}
+
+/* ── Page body ── */
+.page{padding:12px 16px 20px;display:flex;flex-direction:column;gap:12px;}
+
+/* ── 2-column layout ── */
+.lay{display:grid;grid-template-columns:1fr 292px;gap:12px;align-items:start;}
+.lcol{display:flex;flex-direction:column;gap:12px;}
+.rcol{display:flex;flex-direction:column;gap:10px;}
+.btm{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+
+/* ── Cards ── */
+.card{background:#fff;border-radius:8px;padding:14px 16px;border:1px solid #e2e8f0;}
+.ctitle{font-size:11px;font-weight:700;color:#1e293b;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.chl{display:flex;align-items:center;gap:6px;}
+.chl::before{content:'';display:inline-block;width:3px;height:13px;background:#e74c3c;border-radius:2px;}
+.ctag{font-size:9px;background:#f1f5f9;color:#64748b;padding:2px 7px;border-radius:10px;white-space:nowrap;}
+.ctag.on{background:#dbeafe;color:#1d4ed8;}
+
+/* ── Sidebar: KPI 3-grid ── */
+.kpi3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#e2e8f0;border-radius:8px;overflow:hidden;}
+.kc{background:#fff;padding:10px 8px;text-align:center;}
+.kc-lbl{font-size:8px;color:#94a3b8;font-weight:700;text-transform:uppercase;margin-bottom:3px;}
+.kc-val{font-size:19px;font-weight:800;color:#1e293b;letter-spacing:-1px;}
+.kc-sub{font-size:8px;color:#94a3b8;margin-top:2px;}
+
+/* ── Sidebar: metrics ── */
+.mets{display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;padding:8px 12px 10px;}
+.met{display:flex;justify-content:space-between;align-items:center;padding:2px 0;}
+.mn{font-size:9px;color:#94a3b8;}
+.mv{font-size:10px;font-weight:700;}
+
+/* ── Gauge card ── */
+.gcrd{background:#fff;border-radius:8px;border:1px solid #e2e8f0;padding:12px 16px 8px;}
+.ghdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px;}
+.glbl{font-size:9px;color:#94a3b8;font-weight:700;text-transform:uppercase;}
+.gnum{font-size:22px;font-weight:800;color:#f97316;letter-spacing:-1px;}
+.gsub{font-size:9px;color:#ef4444;font-weight:700;margin-top:1px;}
+
+/* ── Brand ranking ── */
+.rkhdr{display:grid;grid-template-columns:16px 1fr 100px 36px;gap:4px;align-items:center;padding:3px 0 5px;border-bottom:1px solid #f1f5f9;margin-bottom:2px;}
+.rkhcol{font-size:8px;color:#94a3b8;font-weight:700;text-transform:uppercase;}
+.rkrow{display:grid;grid-template-columns:16px 1fr 100px 36px;gap:4px;align-items:center;padding:4px 0;border-bottom:1px solid #f8fafc;}
+.rkrow:last-child{border-bottom:none;}
+.rnn{font-size:9px;font-weight:800;color:#cbd5e1;text-align:center;}
+.rnn.hi{color:#e74c3c;}
+.rnm{font-size:10px;font-weight:600;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rbar{position:relative;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;}
+.rpct{font-size:9px;font-weight:700;text-align:right;}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;padding:2px 6px;border-radius:8px;font-size:9px;font-weight:700;}
+.bg{background:#dcfce7;color:#16a34a;} .br{background:#fee2e2;color:#dc2626;}
+.bb{background:#dbeafe;color:#1d4ed8;} .bo{background:#ffedd5;color:#ea580c;}
+.bgy{background:#f1f5f9;color:#64748b;}
+
+/* ── Chart heights ── */
+#chartTrend{height:185px;}
+#chartBrand{height:205px;}
+#chartIP{height:192px;}
+#chartRegion{height:172px;}
+#chartSegment{height:172px;}
+#chartGauge{height:88px;}
+#chartSummaryBrand{height:240px;}
+
+/* ── Summary view ── */
+.skrow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.skc{background:#fff;border-radius:8px;border:1px solid #e2e8f0;padding:18px 20px;}
+.sclbl{font-size:9px;color:#94a3b8;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:7px;}
+.scval{font-size:34px;font-weight:800;letter-spacing:-2px;line-height:1;}
+.scbdg{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;}
+
+.smain{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;}
+.scard{background:#fff;border-radius:8px;border:1px solid #e2e8f0;padding:14px 16px;}
+.sctitle{font-size:11px;font-weight:700;color:#1e293b;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.sctitle::before{content:'';display:inline-block;width:3px;height:13px;background:#e74c3c;border-radius:2px;flex-shrink:0;}
+
+.gaprow{margin-bottom:10px;}
+.gaplbls{display:flex;justify-content:space-between;font-size:10px;color:#64748b;margin-bottom:4px;}
+.gaptrack{height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden;}
+.gapfill{height:100%;border-radius:7px;display:flex;align-items:center;justify-content:flex-end;padding-right:7px;}
+.gappct{font-size:9px;font-weight:800;color:#fff;}
+
+.iprow{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f8fafc;}
+.iprow:last-child{border-bottom:none;}
+.ipnm{font-size:10px;font-weight:600;color:#374151;}
+.ipdelta{font-size:10px;font-weight:700;}
+
+.stile{border-radius:6px;padding:9px 11px;margin-bottom:6px;border-left:3px solid;}
+.stile:last-child{margin-bottom:0;}
+.stn{font-size:19px;font-weight:800;}
+.stl{font-size:9px;margin-top:2px;line-height:1.3;}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <div class="logo">
+    <div class="lmark">GSC</div>
+    <div><div class="ltext">GSC実績ダッシュボード</div><div class="lsub">Good Smile Company 企画部 2025–2028</div></div>
+  </div>
+  <div class="tabs">
+    <div class="tab" data-tab="summary">Summary</div>
+    <div class="tab active" data-tab="detail">実績詳細</div>
+  </div>
+  <div class="hdinfo">最終更新: 2026年6月 ／ 出典: IP毎全実績_過去5年.xlsx ＋ FY27-28_戦略提案.pptx</div>
+</div>
+
+<div class="fb">
+  <span class="fl">セグメント</span>
+  <select id="fltSeg" class="fs">
+    <option value="">（すべて）</option>
+    <option>フィギュア</option><option>プラモデル</option><option>ぬいぐるみ</option><option>ドール</option><option>トイ</option>
+  </select>
+  <span class="fl">ブランド</span>
+  <select id="fltBrand" class="fs">
+    <option value="">（すべて）</option>
+    <option>ねんどろいど</option><option>スケール</option><option>メカスマ</option>
+    <option>POP UP PARADE</option><option>ぬいぐるみ</option><option>Hello!</option>
+    <option>くじ</option><option>figma</option><option>ブラインドBOX</option>
+  </select>
+  <span class="fl">地域</span>
+  <select id="fltReg" class="fs">
+    <option value="">（すべて）</option>
+    <option>日本</option><option>中国</option><option>アメリカ</option><option>韓国</option><option>台湾</option><option>ヨーロッパ</option>
+  </select>
+  <div class="fdiv"></div>
+  <div id="drillBadge" style="display:none;align-items:center;gap:6px;padding:3px 10px;background:#1e293b;color:#f1f5f9;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;" onclick="resetDrill()"></div>
+  <span class="fl">基準年</span>
+  <select class="fs"><option>2025年</option><option>2024年</option><option>2023年</option></select>
+  <span class="fl">表示</span>
+  <select class="fs"><option>目標比較</option><option>前年比</option><option>地域別</option></select>
+</div>
+
+<!-- ═══ 実績詳細 ═══ -->
+<div id="view-detail" class="page">
+  <div class="lay">
+    <div class="lcol">
+      <div class="card">
+        <div class="ctitle"><span class="chl">全社受注売上トレンド</span><span class="ctag">2023–2028年 実績 ／ 目標</span></div>
+        <div id="chartTrend"></div>
+      </div>
+      <div class="card">
+        <div class="ctitle"><span class="chl">ブランド別 売上実績 vs 目標</span><span class="ctag" id="tagBrand">億円</span></div>
+        <div id="chartBrand"></div>
+      </div>
+      <div class="btm">
+        <div class="card">
+          <div class="ctitle"><span class="chl">IP別ランキング【2024→2025年】</span><span id="ipSelBadge" class="ctag" style="display:none;cursor:pointer;" title="クリックで解除"></span></div>
+          <div id="chartIP"></div>
+        </div>
+        <div class="card">
+          <div class="ctitle"><span class="chl">地域別シェア【2023→2025年】</span><span class="ctag" id="tagReg">全地域</span></div>
+          <div id="chartRegion"></div>
+        </div>
+        <div class="card">
+          <div class="ctitle"><span class="chl">セグメント別粗利率</span><span class="ctag" id="tagSeg">全セグメント</span></div>
+          <div id="chartSegment"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rcol">
+      <div style="background:#fff;border-radius:8px;border:1px solid #e2e8f0;overflow:hidden;">
+        <div class="kpi3">
+          <div class="kc"><div class="kc-lbl">2025年実績</div><div class="kc-val">230</div><div class="kc-sub">億円</div></div>
+          <div class="kc"><div class="kc-lbl">2027年目標</div><div class="kc-val">317</div><div class="kc-sub">億円</div></div>
+          <div class="kc"><div class="kc-lbl">2028年目標</div><div class="kc-val">400</div><div class="kc-sub">億円</div></div>
+        </div>
+        <div class="mets">
+          <div class="met"><span class="mn">2027年ギャップ</span><span class="mv" style="color:#f97316;">87億円</span></div>
+          <div class="met"><span class="mn">2028年ギャップ</span><span class="mv" style="color:#ef4444;">170億円</span></div>
+          <div class="met"><span class="mn">最高粗利率</span><span class="mv" style="color:#22c55e;">40.0%</span></div>
+          <div class="met"><span class="mn">注力IP数</span><span class="mv" style="color:#3b82f6;">5 IP</span></div>
+        </div>
+      </div>
+
+      <div class="gcrd">
+        <div class="ghdr">
+          <div>
+            <div class="glbl">2026年 進捗（3月末）</div>
+            <div style="font-size:10px;color:#64748b;margin-top:3px;">計画 <b style="color:#1e293b;">250億円</b></div>
+          </div>
+          <div style="text-align:right;">
+            <div class="gnum">110.9<span style="font-size:11px;font-weight:400;color:#94a3b8;">億</span></div>
+            <div class="gsub">計画進捗 44.3%</div>
+          </div>
+        </div>
+        <div id="chartGauge"></div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <div class="ctitle"><span class="chl">2027年 目標達成率ランキング</span></div>
+        <div class="rkhdr">
+          <span></span>
+          <span class="rkhcol">ブランド</span>
+          <span class="rkhcol">2027年比 ／ 2028年比</span>
+          <span class="rkhcol" style="text-align:right;">倍率</span>
+        </div>
+        <div id="brandRank"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Summary ═══ -->
+<div id="view-summary" class="page" style="display:none;">
+  <div class="skrow">
+    <div class="skc">
+      <div class="sclbl">2025年 実績</div>
+      <div class="scval" style="color:#3b82f6;">230<span style="font-size:16px;font-weight:400;color:#94a3b8;"> 億円</span></div>
+      <div class="scbdg"><span class="badge bg">▲ 前年比+3.5%</span><span class="badge bb">対計画 92%</span></div>
+    </div>
+    <div class="skc">
+      <div class="sclbl">2026年 進捗（3月末）</div>
+      <div class="scval" style="color:#f97316;">110.9<span style="font-size:16px;font-weight:400;color:#94a3b8;"> 億円</span></div>
+      <div class="scbdg"><span class="badge br">計画進捗 44.3%</span><span class="badge bgy">計画 250億</span></div>
+    </div>
+    <div class="skc">
+      <div class="sclbl">2027年 目標ギャップ</div>
+      <div class="scval" style="color:#f97316;">87<span style="font-size:16px;font-weight:400;color:#94a3b8;"> 億円不足</span></div>
+      <div class="scbdg"><span class="badge bo">目標 317億</span><span class="badge bgy">達成率 72.6%</span></div>
+    </div>
+    <div class="skc">
+      <div class="sclbl">2028年 目標ギャップ</div>
+      <div class="scval" style="color:#ef4444;">170<span style="font-size:16px;font-weight:400;color:#94a3b8;"> 億円不足</span></div>
+      <div class="scbdg"><span class="badge br">目標 400億</span><span class="badge bgy">達成率 57.5%</span></div>
+    </div>
+  </div>
+
+  <div class="smain">
+    <div class="scard">
+      <div class="sctitle">目標達成ギャップ分析</div>
+      <div class="gaprow">
+        <div class="gaplbls"><span>2025年 実績</span><span style="font-weight:700;color:#1e293b;">230億 / 250億（2026年計画）</span></div>
+        <div class="gaptrack"><div class="gapfill" style="width:92%;background:linear-gradient(90deg,#1d4ed8,#60a5fa);"><span class="gappct">92%</span></div></div>
+      </div>
+      <div class="gaprow">
+        <div class="gaplbls"><span>2026年 進捗（3月末）</span><span style="font-weight:700;color:#1e293b;">110.9億 / 250億</span></div>
+        <div class="gaptrack"><div class="gapfill" style="width:44.3%;background:linear-gradient(90deg,#f59e0b,#f97316);"><span class="gappct">44%</span></div></div>
+      </div>
+      <div class="gaprow">
+        <div class="gaplbls"><span>2027年 目標進捗</span><span style="font-weight:700;color:#1e293b;">230億 / 317億</span></div>
+        <div class="gaptrack"><div class="gapfill" style="width:72.6%;background:linear-gradient(90deg,#f59e0b,#f97316);"><span class="gappct">72.6%</span></div></div>
+      </div>
+      <div class="gaprow" style="margin-bottom:0;">
+        <div class="gaplbls"><span>2028年 目標進捗</span><span style="font-weight:700;color:#1e293b;">230億 / 400億</span></div>
+        <div class="gaptrack"><div class="gapfill" style="width:57.5%;background:linear-gradient(90deg,#dc2626,#f87171);"><span class="gappct">57.5%</span></div></div>
+      </div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid #f1f5f9;display:flex;gap:8px;">
+        <div style="flex:1;background:#fff7ed;border-radius:6px;padding:10px;text-align:center;">
+          <div style="font-size:8px;color:#92400e;font-weight:700;margin-bottom:4px;">2027年まで（2年）</div>
+          <div style="font-size:24px;font-weight:800;color:#f97316;letter-spacing:-1px;">+27%</div>
+          <div style="font-size:8px;color:#64748b;margin-top:2px;">年平均+13%が必要</div>
+        </div>
+        <div style="flex:1;background:#fef2f2;border-radius:6px;padding:10px;text-align:center;">
+          <div style="font-size:8px;color:#991b1b;font-weight:700;margin-bottom:4px;">2028年まで（3年）</div>
+          <div style="font-size:24px;font-weight:800;color:#ef4444;letter-spacing:-1px;">+74%</div>
+          <div style="font-size:8px;color:#64748b;margin-top:2px;">年平均+20%が必要</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scard">
+      <div class="sctitle">成長ドライバー【2024→2025年】</div>
+      <div style="font-size:9px;color:#94a3b8;font-weight:700;text-transform:uppercase;margin-bottom:6px;">増収 TOP3</div>
+      <div class="iprow"><div><span style="background:#dcfce7;color:#16a34a;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px;">1</span><span class="ipnm">初音ミク</span></div><span class="ipdelta" style="color:#22c55e;">▲+9.32億</span></div>
+      <div class="iprow"><div><span style="background:#dcfce7;color:#16a34a;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px;">2</span><span class="ipnm">ブルーアーカイブ</span></div><span class="ipdelta" style="color:#22c55e;">▲+8.17億</span></div>
+      <div class="iprow"><div><span style="background:#dcfce7;color:#16a34a;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px;">3</span><span class="ipnm">BanG Dream!</span></div><span class="ipdelta" style="color:#22c55e;">▲+7.26億</span></div>
+      <div style="font-size:9px;color:#94a3b8;font-weight:700;text-transform:uppercase;margin:10px 0 6px;">要注意 IP</div>
+      <div class="iprow"><div><span style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px;">注</span><span class="ipnm">グリッドマンU</span></div><span class="ipdelta" style="color:#ef4444;">▼−6.97億</span></div>
+      <div class="iprow"><div><span style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px;">注</span><span class="ipnm">リコリス・リコイル</span></div><span class="ipdelta" style="color:#ef4444;">▼−4.39億</span></div>
+      <div class="iprow"><div><span style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px;">注</span><span class="ipnm">ぼっち・ざ・ろっく！</span></div><span class="ipdelta" style="color:#ef4444;">▼−2.91億</span></div>
+    </div>
+
+    <div class="scard">
+      <div class="sctitle">戦略優先事項</div>
+      <div class="stile" style="background:#eff6ff;border-color:#3b82f6;"><div class="stn" style="color:#1d4ed8;">×13.8</div><div class="stl" style="color:#1e40af;">figma 28年倍率<br/>最大成長ブランド</div></div>
+      <div class="stile" style="background:#fff7ed;border-color:#f97316;"><div class="stn" style="color:#f97316;">×60</div><div class="stl" style="color:#9a3412;">ブラインドBOX 28年倍率<br/>新市場開拓</div></div>
+      <div class="stile" style="background:#f0fdf4;border-color:#22c55e;"><div class="stn" style="color:#16a34a;">+11pt</div><div class="stl" style="color:#15803d;">中国シェア拡大 23年→25年<br/>海外展開の主力</div></div>
+      <div class="stile" style="background:#fef2f2;border-color:#ef4444;"><div class="stn" style="color:#ef4444;">−5.1pt</div><div class="stl" style="color:#991b1b;">アメリカ シェア低下<br/>要テコ入れ</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ctitle"><span class="chl">2025→2028年 ブランド別 成長必要額と目標倍率</span><span class="ctag">億円（2025年実績 ＋ 必要成長額 ＝ 2028年目標）</span></div>
+    <div id="chartSummaryBrand"></div>
+  </div>
+</div>
+
+<script>
+const DATA = {
+  sales:{years:['2023','2024','2025','2026','2027','2028'],actual:[207,222,230,null,null,null],plan:[null,null,230,250,null,null],target:[null,null,null,null,317,400]},
+  brands:[
+    {name:'ねんどろいど', fy25:71.6,fy27:90.2,fy28:105,mult:'1.47x'},
+    {name:'スケール',     fy25:46.2,fy27:61.1,fy28:80, mult:'1.73x'},
+    {name:'メカスマ',     fy25:35.1,fy27:56.0,fy28:65, mult:'1.85x'},
+    {name:'POP UP PARADE',fy25:30.4,fy27:37.3,fy28:45, mult:'1.48x'},
+    {name:'ぬいぐるみ',   fy25:17.7,fy27:22.1,fy28:30, mult:'1.69x'},
+    {name:'Hello!',       fy25:11.6,fy27:9.7, fy28:15, mult:'1.29x'},
+    {name:'くじ',         fy25:5.1, fy27:8.0, fy28:14, mult:'2.74x'},
+    {name:'figma',        fy25:1.2, fy27:14.6,fy28:22, mult:'18.3x'},
+    {name:'ブラインドBOX', fy25:3.4, fy27:12.3,fy28:18, mult:'5.3x'},
+  ],
+  ips:[
+    {name:'初音ミク',            fy24:10.01,fy25:19.33,delta:9.32},
+    {name:'ブルーアーカイブ',    fy24:11.05,fy25:19.22,delta:8.17},
+    {name:'BanG Dream!',         fy24:1.83, fy25:9.09, delta:7.26},
+    {name:'Fate/Grand Order',    fy24:2.95, fy25:5.59, delta:2.64},
+    {name:'葬送のフリーレン',    fy24:4.58, fy25:6.05, delta:1.47},
+    {name:'ぼっち・ざ・ろっく！', fy24:7.95, fy25:5.04, delta:-2.91},
+    {name:'呪術廻戦',            fy24:4.60, fy25:1.56, delta:-3.03},
+    {name:'グリッドマンU',       fy24:8.76, fy25:1.79, delta:-6.97},
+    {name:'ホロライブ',          fy24:9.28, fy25:6.91, delta:-2.37},
+  ],
+  regions:[
+    {name:'日本',      fy23:54.5,fy25:48.1,delta:-6.4},
+    {name:'中国',      fy23:10.4,fy25:20.9,delta:10.5},
+    {name:'アメリカ',  fy23:12.9,fy25:8.9, delta:-4.0},
+    {name:'韓国',      fy23:3.6, fy25:6.4, delta:2.8},
+    {name:'台湾',      fy23:6.6, fy25:5.8, delta:-0.8},
+    {name:'ヨーロッパ',fy23:4.3, fy25:3.3, delta:-1.0},
+    {name:'その他',    fy23:7.7, fy25:6.5, delta:-1.2},
+  ],
+  segments:[
+    {name:'ぬいぐるみ',gross:40.0,rev:29},
+    {name:'ドール',    gross:24.4,rev:29},
+    {name:'トイ',      gross:21.6,rev:27},
+    {name:'フィギュア',gross:20.3,rev:385},
+    {name:'プラモデル',gross:15.8,rev:40},
+  ],
+};
+
+
+
+// セグメント→ブランド マッピング（セグメントフィルターがブランドチャートにも連動）
+const SEG_BRAND = {
+  'フィギュア': ['ねんどろいど','スケール','figma','POP UP PARADE'],
+  'ぬいぐるみ': ['ぬいぐるみ'],
+  'プラモデル': ['メカスマ'],
+  'ドール':     ['Hello!'],
+  'トイ':       ['くじ','ブラインドBOX'],
+};
+
+const F = {brand:'', region:'', segment:'', ip:''};
+const DRILL = {"brands": {"ねんどろいど": {"kpi": {"fy24": 97.7, "fy25": 77.4, "delta": -20.3}, "trend": [3.2, 79.0, 97.7, 77.4, 54.4], "ips": [{"name": "初音ミク", "fy24": 4.38, "fy25": 6.69, "delta": 2.31}, {"name": "ホロライブ", "fy24": 6.39, "fy25": 3.07, "delta": -3.32}, {"name": "ぼっち・ざ・ろっく！", "fy24": 6.1, "fy25": 2.56, "delta": -3.54}, {"name": "ブルーアーカイブ", "fy24": 4.44, "fy25": 3.8, "delta": -0.64}, {"name": "フリーレン", "fy24": 3.25, "fy25": 3.79, "delta": 0.54}, {"name": "ウマ娘", "fy24": 3.05, "fy25": 2.73, "delta": -0.32}, {"name": "ハイキュー", "fy24": 3.83, "fy25": 1.08, "delta": -2.75}, {"name": "呪術廻戦", "fy24": 3.92, "fy25": 0.0, "delta": -3.92}], "regions": [{"name": "日本", "fy23": 48.7, "fy25": 44.7, "delta": -4.0}, {"name": "中国", "fy23": 10.0, "fy25": 17.7, "delta": 7.7}, {"name": "台湾", "fy23": 6.9, "fy25": 5.2, "delta": -1.7}, {"name": "韓国", "fy23": 3.2, "fy25": 7.3, "delta": 4.0}, {"name": "アメリカ", "fy23": 17.4, "fy25": 13.3, "delta": -4.1}, {"name": "ヨーロッパ", "fy23": 3.6, "fy25": 3.2, "delta": -0.4}, {"name": "その他", "fy23": 10.2, "fy25": 8.6, "delta": -1.6}], "brands": []}, "スケール": {"kpi": {"fy24": 39.4, "fy25": 46.4, "delta": 7.1}, "trend": [0.5, 25.5, 39.4, 46.4, 38.4], "ips": [{"name": "ブルーアーカイブ", "fy24": 2.6, "fy25": 11.79, "delta": 9.2}, {"name": "初音ミク", "fy24": 4.37, "fy25": 8.88, "delta": 4.51}, {"name": "Fate/GO", "fy24": 2.02, "fy25": 2.99, "delta": 0.97}, {"name": "リコリコ", "fy24": 4.06, "fy25": 0.0, "delta": -4.06}, {"name": "シュタゲ", "fy24": 0.0, "fy25": 2.84, "delta": 2.84}, {"name": "ぼっち・ざ・ろっく！", "fy24": 1.18, "fy25": 1.5, "delta": 0.32}, {"name": "ウマ娘", "fy24": 1.59, "fy25": 0.85, "delta": -0.75}, {"name": "やはり俺の青春ラブコメは", "fy24": 2.27, "fy25": 0.0, "delta": -2.27}], "regions": [{"name": "日本", "fy23": 76.8, "fy25": 48.9, "delta": -27.9}, {"name": "中国", "fy23": 8.5, "fy25": 28.2, "delta": 19.7}, {"name": "台湾", "fy23": 4.5, "fy25": 5.0, "delta": 0.6}, {"name": "韓国", "fy23": 1.3, "fy25": 4.8, "delta": 3.5}, {"name": "アメリカ", "fy23": 4.0, "fy25": 5.2, "delta": 1.2}, {"name": "ヨーロッパ", "fy23": 1.5, "fy25": 2.3, "delta": 0.8}, {"name": "その他", "fy23": 3.4, "fy25": 5.5, "delta": 2.1}], "brands": []}, "メカスマ": {"kpi": {"fy24": 36.5, "fy25": 35.1, "delta": -1.4}, "trend": [0.2, 25.2, 36.5, 35.1, 29.6], "ips": [{"name": "グリッドマンU", "fy24": 7.88, "fy25": 0.64, "delta": -7.24}, {"name": "マイトガイン", "fy24": 4.61, "fy25": 1.92, "delta": -2.7}, {"name": "ダ・ガーン", "fy24": 4.18, "fy25": 1.06, "delta": -3.11}, {"name": "ファイバード", "fy24": 0.0, "fy25": 4.88, "delta": 4.88}, {"name": "ブレイバーン", "fy24": 0.15, "fy25": 3.9, "delta": 3.75}, {"name": "グランゾート", "fy24": 1.73, "fy25": 0.45, "delta": -1.28}, {"name": "楽園追放 -Expell", "fy24": 1.49, "fy25": 0.29, "delta": -1.2}, {"name": "超時空世紀オーガス", "fy24": 0.95, "fy25": 0.6, "delta": -0.35}], "regions": [{"name": "日本", "fy23": 64.9, "fy25": 64.8, "delta": -0.1}, {"name": "中国", "fy23": 10.2, "fy25": 11.0, "delta": 0.8}, {"name": "台湾", "fy23": 8.2, "fy25": 6.8, "delta": -1.4}, {"name": "韓国", "fy23": 9.7, "fy25": 11.1, "delta": 1.4}, {"name": "アメリカ", "fy23": 2.7, "fy25": 2.1, "delta": -0.6}, {"name": "ヨーロッパ", "fy23": 1.1, "fy25": 1.3, "delta": 0.2}, {"name": "その他", "fy23": 3.2, "fy25": 2.8, "delta": -0.4}], "brands": []}, "POP UP PARADE": {"kpi": {"fy24": 32.0, "fy25": 30.4, "delta": -1.6}, "trend": [0.9, 26.1, 32.0, 30.4, 18.5], "ips": [{"name": "ホロライブ", "fy24": 1.47, "fy25": 3.03, "delta": 1.56}, {"name": "初音ミク", "fy24": 0.62, "fy25": 2.37, "delta": 1.74}, {"name": "NEEDY GIRL O", "fy24": 1.52, "fy25": 0.8, "delta": -0.72}, {"name": "ブルーアーカイブ", "fy24": 1.84, "fy25": 0.3, "delta": -1.53}, {"name": "ダンジョン飯", "fy24": 0.72, "fy25": 1.27, "delta": 0.55}, {"name": "サイバーパンク エッジラ", "fy24": 1.77, "fy25": 0.0, "delta": -1.77}, {"name": "HxH", "fy24": 1.62, "fy25": 0.0, "delta": -1.62}, {"name": "フリーレン", "fy24": 0.91, "fy25": 0.67, "delta": -0.24}], "regions": [{"name": "日本", "fy23": 36.7, "fy25": 40.5, "delta": 3.8}, {"name": "中国", "fy23": 11.2, "fy25": 17.7, "delta": 6.6}, {"name": "台湾", "fy23": 7.6, "fy25": 7.0, "delta": -0.6}, {"name": "韓国", "fy23": 1.8, "fy25": 2.9, "delta": 1.2}, {"name": "アメリカ", "fy23": 19.7, "fy25": 13.7, "delta": -6.0}, {"name": "ヨーロッパ", "fy23": 13.3, "fy25": 9.7, "delta": -3.6}, {"name": "その他", "fy23": 9.8, "fy25": 8.4, "delta": -1.3}], "brands": []}, "ぬいぐるみ": {"kpi": {"fy24": 7.3, "fy25": 17.7, "delta": 10.4}, "trend": [0.0, 2.3, 7.3, 17.7, 14.2], "ips": [{"name": "BanG Dream!", "fy24": 1.83, "fy25": 8.75, "delta": 6.91}, {"name": "ブルーアーカイブ", "fy24": 1.73, "fy25": 2.82, "delta": 1.09}, {"name": "フリーレン", "fy24": 0.42, "fy25": 0.35, "delta": -0.08}, {"name": "Fate/GO", "fy24": 0.0, "fy25": 0.69, "delta": 0.69}, {"name": "GUILTY GEAR-", "fy24": 0.11, "fy25": 0.34, "delta": 0.23}, {"name": "ダンジョン飯", "fy24": 0.19, "fy25": 0.22, "delta": 0.03}, {"name": "初音ミク", "fy24": 0.03, "fy25": 0.37, "delta": 0.34}, {"name": "東方LostWord", "fy24": 0.0, "fy25": 0.39, "delta": 0.39}], "regions": [{"name": "日本", "fy23": 61.7, "fy25": 42.4, "delta": -19.3}, {"name": "中国", "fy23": 8.7, "fy25": 37.6, "delta": 29.0}, {"name": "台湾", "fy23": 1.8, "fy25": 6.0, "delta": 4.3}, {"name": "韓国", "fy23": 0.6, "fy25": 2.9, "delta": 2.4}, {"name": "アメリカ", "fy23": 17.7, "fy25": 6.9, "delta": -10.8}, {"name": "ヨーロッパ", "fy23": 0.2, "fy25": 0.1, "delta": -0.2}, {"name": "その他", "fy23": 9.4, "fy25": 4.0, "delta": -5.3}], "brands": []}, "Hello!": {"kpi": {"fy24": 5.0, "fy25": 5.7, "delta": 0.7}, "trend": [0.7, 3.9, 5.0, 5.7, 2.5], "ips": [{"name": "Blythe", "fy24": 3.26, "fy25": 2.22, "delta": -1.04}, {"name": "初音ミク", "fy24": 0.54, "fy25": 0.5, "delta": -0.04}, {"name": "エヴァ", "fy24": 0.09, "fy25": 0.54, "delta": 0.45}, {"name": "ホロライブ", "fy24": 0.2, "fy25": 0.24, "delta": 0.04}, {"name": "HxH", "fy24": 0.33, "fy25": 0.0, "delta": -0.33}, {"name": "魔法少女まどか☆マギカ", "fy24": 0.0, "fy25": 0.3, "delta": 0.3}, {"name": "進撃の巨人", "fy24": 0.0, "fy25": 0.27, "delta": 0.27}, {"name": "New PANTY & ", "fy24": 0.0, "fy25": 0.26, "delta": 0.26}], "regions": [{"name": "日本", "fy23": 53.9, "fy25": 40.3, "delta": -13.6}, {"name": "中国", "fy23": 30.3, "fy25": 37.9, "delta": 7.6}, {"name": "台湾", "fy23": 3.4, "fy25": 5.7, "delta": 2.3}, {"name": "韓国", "fy23": 4.0, "fy25": 7.1, "delta": 3.1}, {"name": "アメリカ", "fy23": 3.9, "fy25": 4.6, "delta": 0.7}, {"name": "ヨーロッパ", "fy23": 1.0, "fy25": 0.9, "delta": -0.1}, {"name": "その他", "fy23": 3.6, "fy25": 3.6, "delta": 0.1}], "brands": []}, "figma": {"kpi": {"fy24": 1.8, "fy25": 1.2, "delta": -0.5}, "trend": [0.2, 0.1, 1.8, 1.2, 1.8], "ips": [{"name": "初音ミク GTプロジェク", "fy24": 0.67, "fy25": 0.0, "delta": -0.67}, {"name": "ミクGT", "fy24": 0.0, "fy25": 0.6, "delta": 0.6}, {"name": "Dead Space", "fy24": 0.6, "fy25": 0.0, "delta": -0.6}, {"name": "Doom Eternal", "fy24": 0.0, "fy25": 0.42, "delta": 0.42}, {"name": "グリッドマンU", "fy24": 0.41, "fy25": 0.0, "delta": -0.41}, {"name": "DiabloR IV", "fy24": 0.0, "fy25": 0.2, "delta": 0.2}, {"name": "アサシンクリード: ヴァ", "fy24": 0.08, "fy25": 0.0, "delta": -0.08}], "regions": [{"name": "日本", "fy23": 53.4, "fy25": 36.0, "delta": -17.4}, {"name": "中国", "fy23": 25.7, "fy25": 23.5, "delta": -2.3}, {"name": "台湾", "fy23": 2.5, "fy25": 3.4, "delta": 0.8}, {"name": "韓国", "fy23": 2.5, "fy25": 2.4, "delta": -0.1}, {"name": "アメリカ", "fy23": 0.0, "fy25": 23.3, "delta": 23.3}, {"name": "ヨーロッパ", "fy23": 2.6, "fy25": 5.3, "delta": 2.6}, {"name": "その他", "fy23": 13.2, "fy25": 6.2, "delta": -7.0}], "brands": []}, "ブラインドBOX": {"kpi": {"fy24": 0.8, "fy25": 3.4, "delta": 2.6}, "trend": [0.1, 1.5, 0.8, 3.4, 5.5], "ips": [{"name": "ハイキュー", "fy24": 0.04, "fy25": 1.24, "delta": 1.2}, {"name": "ぼっち・ざ・ろっく！", "fy24": 0.0, "fy25": 0.75, "delta": 0.75}, {"name": "ピアプロキャラクターズ", "fy24": 0.0, "fy25": 0.72, "delta": 0.72}, {"name": "呪術廻戦", "fy24": 0.52, "fy25": 0.0, "delta": -0.52}, {"name": "ブルーロック", "fy24": 0.0, "fy25": 0.37, "delta": 0.37}, {"name": "SPY×FAMILY", "fy24": 0.0, "fy25": 0.23, "delta": 0.23}, {"name": "Dr. MORICKY", "fy24": 0.14, "fy25": 0.06, "delta": -0.08}, {"name": "進撃の巨人", "fy24": 0.1, "fy25": 0.0, "delta": -0.1}], "regions": [{"name": "日本", "fy23": 72.1, "fy25": 53.2, "delta": -18.9}, {"name": "中国", "fy23": 11.8, "fy25": 15.0, "delta": 3.2}, {"name": "台湾", "fy23": 3.9, "fy25": 9.3, "delta": 5.5}, {"name": "韓国", "fy23": 1.5, "fy25": 7.7, "delta": 6.2}, {"name": "アメリカ", "fy23": 3.6, "fy25": 4.3, "delta": 0.7}, {"name": "ヨーロッパ", "fy23": 2.4, "fy25": 2.7, "delta": 0.3}, {"name": "その他", "fy23": 4.7, "fy25": 7.7, "delta": 3.0}], "brands": []}}, "ips": {"初音ミク": {"kpi": {"fy24": 10.0, "fy25": 19.3, "delta": 9.3}, "trend": [0.2, 9.1, 10.0, 19.3, 19.6], "regions": [{"name": "日本", "fy23": 52.1, "fy25": 32.4, "delta": -19.7}, {"name": "中国", "fy23": 14.2, "fy25": 30.9, "delta": 16.7}, {"name": "台湾", "fy23": 6.2, "fy25": 4.9, "delta": -1.3}, {"name": "韓国", "fy23": 2.9, "fy25": 6.5, "delta": 3.6}, {"name": "アメリカ", "fy23": 12.0, "fy25": 12.2, "delta": 0.3}, {"name": "ヨーロッパ", "fy23": 2.4, "fy25": 4.2, "delta": 1.8}, {"name": "その他", "fy23": 10.3, "fy25": 8.9, "delta": -1.4}], "brands": [{"name": "スケール", "fy24": 4.37, "fy25": 8.88, "delta": 4.51}, {"name": "ねんどろいど", "fy24": 4.38, "fy25": 6.69, "delta": 2.31}, {"name": "POP UP PARADE", "fy24": 0.62, "fy25": 2.37, "delta": 1.74}, {"name": "Hello!", "fy24": 0.54, "fy25": 0.5, "delta": -0.04}, {"name": "ぬいぐるみ", "fy24": 0.03, "fy25": 0.37, "delta": 0.34}], "ips": []}, "ブルーアーカイブ": {"kpi": {"fy24": 11.1, "fy25": 19.2, "delta": 8.2}, "trend": [0.0, 0.5, 11.1, 19.2, 12.7], "regions": [{"name": "日本", "fy23": 92.5, "fy25": 54.5, "delta": -38.0}, {"name": "中国", "fy23": 0.0, "fy25": 20.4, "delta": 20.4}, {"name": "台湾", "fy23": 0.0, "fy25": 5.4, "delta": 5.4}, {"name": "韓国", "fy23": 7.5, "fy25": 12.4, "delta": 4.9}, {"name": "アメリカ", "fy23": 0.0, "fy25": 2.7, "delta": 2.7}, {"name": "ヨーロッパ", "fy23": 0.0, "fy25": 0.5, "delta": 0.5}, {"name": "その他", "fy23": 0.0, "fy25": 4.2, "delta": 4.2}], "brands": [{"name": "スケール", "fy24": 2.6, "fy25": 11.79, "delta": 9.2}, {"name": "ねんどろいど", "fy24": 4.44, "fy25": 3.8, "delta": -0.64}, {"name": "ぬいぐるみ", "fy24": 1.73, "fy25": 2.82, "delta": 1.09}, {"name": "POP UP PARADE", "fy24": 1.84, "fy25": 0.3, "delta": -1.53}], "ips": []}, "BanG Dream!": {"kpi": {"fy24": 1.8, "fy25": 9.1, "delta": 7.3}, "trend": [0.0, 0.0, 1.8, 9.1, 6.6], "regions": [{"name": "日本", "fy23": 0.0, "fy25": 23.7, "delta": 23.7}, {"name": "中国", "fy23": 0.0, "fy25": 64.9, "delta": 64.9}, {"name": "台湾", "fy23": 0.0, "fy25": 8.0, "delta": 8.0}, {"name": "韓国", "fy23": 0.0, "fy25": 1.5, "delta": 1.5}, {"name": "アメリカ", "fy23": 0.0, "fy25": 0.8, "delta": 0.8}, {"name": "ヨーロッパ", "fy23": 0.0, "fy25": 0.0, "delta": 0.0}, {"name": "その他", "fy23": 0.0, "fy25": 1.1, "delta": 1.1}], "brands": [{"name": "ぬいぐるみ", "fy24": 1.83, "fy25": 8.75, "delta": 6.91}, {"name": "POP UP PARADE", "fy24": 0.0, "fy25": 0.29, "delta": 0.29}], "ips": []}, "Fate/GO": {"kpi": {"fy24": 3.0, "fy25": 5.6, "delta": 2.6}, "trend": [0.1, 3.1, 3.0, 5.6, 2.2], "regions": [{"name": "日本", "fy23": 79.2, "fy25": 55.7, "delta": -23.5}, {"name": "中国", "fy23": 9.4, "fy25": 24.0, "delta": 14.6}, {"name": "台湾", "fy23": 4.0, "fy25": 5.8, "delta": 1.9}, {"name": "韓国", "fy23": 1.2, "fy25": 3.7, "delta": 2.5}, {"name": "アメリカ", "fy23": 2.5, "fy25": 4.9, "delta": 2.4}, {"name": "ヨーロッパ", "fy23": 0.6, "fy25": 0.9, "delta": 0.3}, {"name": "その他", "fy23": 3.1, "fy25": 5.0, "delta": 1.8}], "brands": [{"name": "スケール", "fy24": 2.02, "fy25": 2.99, "delta": 0.97}, {"name": "ねんどろいど", "fy24": 0.93, "fy25": 1.77, "delta": 0.84}, {"name": "ぬいぐるみ", "fy24": 0.0, "fy25": 0.69, "delta": 0.69}, {"name": "Hello!", "fy24": 0.0, "fy25": 0.15, "delta": 0.15}], "ips": []}, "フリーレン": {"kpi": {"fy24": 4.6, "fy25": 6.1, "delta": 1.5}, "trend": [0.0, 0.0, 4.6, 6.1, 5.0], "regions": [{"name": "日本", "fy23": 0.0, "fy25": 37.6, "delta": 37.6}, {"name": "中国", "fy23": 0.0, "fy25": 22.9, "delta": 22.9}, {"name": "台湾", "fy23": 0.0, "fy25": 8.3, "delta": 8.3}, {"name": "韓国", "fy23": 0.0, "fy25": 6.1, "delta": 6.1}, {"name": "アメリカ", "fy23": 0.0, "fy25": 11.6, "delta": 11.6}, {"name": "ヨーロッパ", "fy23": 0.0, "fy25": 4.8, "delta": 4.8}, {"name": "その他", "fy23": 0.0, "fy25": 8.8, "delta": 8.8}], "brands": [{"name": "ねんどろいど", "fy24": 3.25, "fy25": 3.79, "delta": 0.54}, {"name": "POP UP PARADE", "fy24": 0.91, "fy25": 0.67, "delta": -0.24}, {"name": "スケール", "fy24": 0.0, "fy25": 1.24, "delta": 1.24}, {"name": "ぬいぐるみ", "fy24": 0.42, "fy25": 0.35, "delta": -0.08}], "ips": []}, "ぼっち・ざ・ろっく！": {"kpi": {"fy24": 7.9, "fy25": 5.0, "delta": -2.9}, "trend": [0.0, 2.5, 7.9, 5.0, 0.9], "regions": [{"name": "日本", "fy23": 43.3, "fy25": 44.4, "delta": 1.1}, {"name": "中国", "fy23": 24.6, "fy25": 27.4, "delta": 2.8}, {"name": "台湾", "fy23": 8.9, "fy25": 6.4, "delta": -2.5}, {"name": "韓国", "fy23": 5.7, "fy25": 12.8, "delta": 7.1}, {"name": "アメリカ", "fy23": 10.2, "fy25": 3.1, "delta": -7.1}, {"name": "ヨーロッパ", "fy23": 1.1, "fy25": 0.9, "delta": -0.2}, {"name": "その他", "fy23": 6.2, "fy25": 5.1, "delta": -1.2}], "brands": [{"name": "ねんどろいど", "fy24": 6.1, "fy25": 2.56, "delta": -3.54}, {"name": "スケール", "fy24": 1.18, "fy25": 1.5, "delta": 0.32}, {"name": "ブラインドBOX", "fy24": 0.0, "fy25": 0.75, "delta": 0.75}, {"name": "ぬいぐるみ", "fy24": 0.27, "fy25": 0.06, "delta": -0.21}, {"name": "POP UP PARADE", "fy24": 0.3, "fy25": 0.0, "delta": -0.3}, {"name": "Hello!", "fy24": 0.09, "fy25": 0.05, "delta": -0.05}], "ips": []}, "呪術廻戦": {"kpi": {"fy24": 4.6, "fy25": 1.6, "delta": -3.0}, "trend": [0.1, 1.4, 4.6, 1.6, 0.7], "regions": [{"name": "日本", "fy23": 50.8, "fy25": 47.8, "delta": -3.0}, {"name": "中国", "fy23": 10.3, "fy25": 8.7, "delta": -1.6}, {"name": "台湾", "fy23": 6.0, "fy25": 5.1, "delta": -0.9}, {"name": "韓国", "fy23": 3.2, "fy25": 3.9, "delta": 0.7}, {"name": "アメリカ", "fy23": 16.7, "fy25": 9.5, "delta": -7.2}, {"name": "ヨーロッパ", "fy23": 2.8, "fy25": 15.5, "delta": 12.7}, {"name": "その他", "fy23": 10.2, "fy25": 9.6, "delta": -0.6}], "brands": [{"name": "ねんどろいど", "fy24": 3.92, "fy25": 0.0, "delta": -3.92}, {"name": "スケール", "fy24": 0.0, "fy25": 0.95, "delta": 0.95}, {"name": "POP UP PARADE", "fy24": 0.0, "fy25": 0.57, "delta": 0.57}, {"name": "ブラインドBOX", "fy24": 0.52, "fy25": 0.0, "delta": -0.52}, {"name": "Hello!", "fy24": 0.16, "fy25": 0.05, "delta": -0.11}], "ips": []}, "グリッドマンU": {"kpi": {"fy24": 8.8, "fy25": 1.8, "delta": -7.0}, "trend": [0.0, 3.0, 8.8, 1.8, 1.3], "regions": [{"name": "日本", "fy23": 86.4, "fy25": 61.7, "delta": -24.7}, {"name": "中国", "fy23": 5.5, "fy25": 17.6, "delta": 12.1}, {"name": "台湾", "fy23": 2.4, "fy25": 8.2, "delta": 5.7}, {"name": "韓国", "fy23": 2.5, "fy25": 6.7, "delta": 4.2}, {"name": "アメリカ", "fy23": 1.0, "fy25": 1.5, "delta": 0.5}, {"name": "ヨーロッパ", "fy23": 0.2, "fy25": 0.6, "delta": 0.4}, {"name": "その他", "fy23": 2.0, "fy25": 3.8, "delta": 1.8}], "brands": [{"name": "メカスマ", "fy24": 7.88, "fy25": 0.64, "delta": -7.24}, {"name": "POP UP PARADE", "fy24": 0.37, "fy25": 0.47, "delta": 0.1}, {"name": "スケール", "fy24": 0.0, "fy25": 0.61, "delta": 0.61}, {"name": "figma", "fy24": 0.41, "fy25": 0.0, "delta": -0.41}, {"name": "ねんどろいど", "fy24": 0.1, "fy25": 0.0, "delta": -0.1}, {"name": "ぬいぐるみ", "fy24": 0.0, "fy25": 0.04, "delta": 0.04}], "ips": []}, "ホロライブ": {"kpi": {"fy24": 9.3, "fy25": 6.9, "delta": -2.4}, "trend": [0.1, 15.3, 9.3, 6.9, 4.0], "regions": [{"name": "日本", "fy23": 59.5, "fy25": 63.6, "delta": 4.1}, {"name": "中国", "fy23": 2.1, "fy25": 5.4, "delta": 3.3}, {"name": "台湾", "fy23": 15.5, "fy25": 14.2, "delta": -1.3}, {"name": "韓国", "fy23": 2.7, "fy25": 4.1, "delta": 1.4}, {"name": "アメリカ", "fy23": 9.6, "fy25": 4.8, "delta": -4.8}, {"name": "ヨーロッパ", "fy23": 2.0, "fy25": 1.8, "delta": -0.2}, {"name": "その他", "fy23": 8.5, "fy25": 6.0, "delta": -2.5}], "brands": [{"name": "ねんどろいど", "fy24": 6.39, "fy25": 3.07, "delta": -3.32}, {"name": "POP UP PARADE", "fy24": 1.47, "fy25": 3.03, "delta": 1.56}, {"name": "スケール", "fy24": 1.08, "fy25": 0.48, "delta": -0.59}, {"name": "Hello!", "fy24": 0.2, "fy25": 0.24, "delta": 0.04}], "ips": []}, "ウマ娘": {"kpi": {"fy24": 4.6, "fy25": 4.9, "delta": 0.3}, "trend": [0.0, 6.9, 4.6, 4.9, 3.7], "regions": [{"name": "日本", "fy23": 79.5, "fy25": 71.8, "delta": -7.7}, {"name": "中国", "fy23": 9.0, "fy25": 13.5, "delta": 4.5}, {"name": "台湾", "fy23": 4.9, "fy25": 4.0, "delta": -1.0}, {"name": "韓国", "fy23": 3.8, "fy25": 6.6, "delta": 2.8}, {"name": "アメリカ", "fy23": 1.1, "fy25": 1.7, "delta": 0.6}, {"name": "ヨーロッパ", "fy23": 0.3, "fy25": 0.7, "delta": 0.4}, {"name": "その他", "fy23": 1.4, "fy25": 1.7, "delta": 0.3}], "brands": [{"name": "ねんどろいど", "fy24": 3.05, "fy25": 2.73, "delta": -0.32}, {"name": "スケール", "fy24": 1.59, "fy25": 0.85, "delta": -0.75}, {"name": "POP UP PARADE", "fy24": 0.0, "fy25": 0.88, "delta": 0.88}, {"name": "ぬいぐるみ", "fy24": 0.0, "fy25": 0.35, "delta": 0.35}], "ips": []}, "ハイキュー": {"kpi": {"fy24": 3.9, "fy25": 2.8, "delta": -1.1}, "trend": [0.1, 1.5, 3.9, 2.8, 0.4], "regions": [{"name": "日本", "fy23": 48.0, "fy25": 40.9, "delta": -7.1}, {"name": "中国", "fy23": 27.4, "fy25": 28.7, "delta": 1.4}, {"name": "台湾", "fy23": 5.1, "fy25": 9.4, "delta": 4.3}, {"name": "韓国", "fy23": 2.6, "fy25": 7.4, "delta": 4.8}, {"name": "アメリカ", "fy23": 6.4, "fy25": 3.6, "delta": -2.7}, {"name": "ヨーロッパ", "fy23": 3.3, "fy25": 2.4, "delta": -0.9}, {"name": "その他", "fy23": 7.2, "fy25": 7.5, "delta": 0.4}], "brands": [{"name": "ねんどろいど", "fy24": 3.83, "fy25": 1.08, "delta": -2.75}, {"name": "ブラインドBOX", "fy24": 0.04, "fy25": 1.24, "delta": 1.2}, {"name": "Hello!", "fy24": 0.0, "fy25": 0.23, "delta": 0.23}, {"name": "ぬいぐるみ", "fy24": 0.0, "fy25": 0.03, "delta": 0.03}], "ips": []}, "HxH": {"kpi": {"fy24": 2.9, "fy25": 0.7, "delta": -2.2}, "trend": [0.0, 2.4, 2.9, 0.7, 1.3], "regions": [{"name": "日本", "fy23": 36.5, "fy25": 34.7, "delta": -1.8}, {"name": "中国", "fy23": 17.6, "fy25": 24.4, "delta": 6.9}, {"name": "台湾", "fy23": 9.4, "fy25": 5.8, "delta": -3.6}, {"name": "韓国", "fy23": 2.9, "fy25": 13.4, "delta": 10.5}, {"name": "アメリカ", "fy23": 15.0, "fy25": 7.7, "delta": -7.3}, {"name": "ヨーロッパ", "fy23": 6.9, "fy25": 2.7, "delta": -4.2}, {"name": "その他", "fy23": 11.7, "fy25": 11.2, "delta": -0.5}], "brands": [{"name": "POP UP PARADE", "fy24": 1.62, "fy25": 0.0, "delta": -1.62}, {"name": "ねんどろいど", "fy24": 0.92, "fy25": 0.68, "delta": -0.24}, {"name": "Hello!", "fy24": 0.33, "fy25": 0.0, "delta": -0.33}], "ips": []}, "リコリコ": {"kpi": {"fy24": 5.3, "fy25": 0.9, "delta": -4.4}, "trend": [0.0, 1.7, 5.3, 0.9, 0.1], "regions": [{"name": "日本", "fy23": 63.7, "fy25": 78.4, "delta": 14.7}, {"name": "中国", "fy23": 9.4, "fy25": 6.3, "delta": -3.2}, {"name": "台湾", "fy23": 9.0, "fy25": 5.3, "delta": -3.7}, {"name": "韓国", "fy23": 1.3, "fy25": 3.1, "delta": 1.7}, {"name": "アメリカ", "fy23": 9.5, "fy25": 2.6, "delta": -6.8}, {"name": "ヨーロッパ", "fy23": 1.2, "fy25": 0.5, "delta": -0.7}, {"name": "その他", "fy23": 5.9, "fy25": 3.8, "delta": -2.0}], "brands": [{"name": "スケール", "fy24": 4.06, "fy25": 0.0, "delta": -4.06}, {"name": "ねんどろいど", "fy24": 1.23, "fy25": 0.17, "delta": -1.06}, {"name": "メカスマ", "fy24": 0.0, "fy25": 0.69, "delta": 0.69}, {"name": "ぬいぐるみ", "fy24": 0.0, "fy25": 0.04, "delta": 0.04}], "ips": []}, "ミクGT": {"kpi": {"fy24": 1.3, "fy25": 4.5, "delta": 3.3}, "trend": [0.0, 1.5, 1.3, 4.5, 2.3], "regions": [{"name": "日本", "fy23": 66.4, "fy25": 50.4, "delta": -16.0}, {"name": "中国", "fy23": 9.6, "fy25": 25.6, "delta": 16.0}, {"name": "台湾", "fy23": 3.8, "fy25": 4.5, "delta": 0.7}, {"name": "韓国", "fy23": 2.6, "fy25": 4.1, "delta": 1.5}, {"name": "アメリカ", "fy23": 8.1, "fy25": 6.7, "delta": -1.4}, {"name": "ヨーロッパ", "fy23": 2.0, "fy25": 3.2, "delta": 1.2}, {"name": "その他", "fy23": 7.5, "fy25": 5.5, "delta": -2.0}], "brands": [{"name": "スケール", "fy24": 0.0, "fy25": 1.94, "delta": 1.94}, {"name": "ねんどろいど", "fy24": 0.43, "fy25": 0.62, "delta": 0.19}, {"name": "メカスマ", "fy24": 0.0, "fy25": 0.8, "delta": 0.8}, {"name": "figma", "fy24": 0.0, "fy25": 0.6, "delta": 0.6}, {"name": "POP UP PARADE", "fy24": 0.55, "fy25": 0.0, "delta": -0.55}], "ips": []}, "進撃の巨人": {"kpi": {"fy24": 1.7, "fy25": 0.6, "delta": -1.0}, "trend": [0.1, 4.0, 1.7, 0.6, 1.2], "regions": [{"name": "日本", "fy23": 23.6, "fy25": 23.0, "delta": -0.6}, {"name": "中国", "fy23": 8.0, "fy25": 25.7, "delta": 17.6}, {"name": "台湾", "fy23": 7.0, "fy25": 15.8, "delta": 8.8}, {"name": "韓国", "fy23": 2.3, "fy25": 5.2, "delta": 2.9}, {"name": "アメリカ", "fy23": 27.8, "fy25": 12.3, "delta": -15.5}, {"name": "ヨーロッパ", "fy23": 14.3, "fy25": 10.8, "delta": -3.5}, {"name": "その他", "fy23": 16.9, "fy25": 7.3, "delta": -9.7}], "brands": [{"name": "POP UP PARADE", "fy24": 0.5, "fy25": 0.33, "delta": -0.17}, {"name": "ねんどろいど", "fy24": 0.53, "fy25": 0.0, "delta": -0.53}, {"name": "スケール", "fy24": 0.47, "fy25": 0.04, "delta": -0.43}, {"name": "Hello!", "fy24": 0.0, "fy25": 0.27, "delta": 0.27}, {"name": "ブラインドBOX", "fy24": 0.1, "fy25": 0.0, "delta": -0.1}, {"name": "ぬいぐるみ", "fy24": 0.03, "fy25": 0.0, "delta": -0.03}], "ips": []}}, "regions": {"日本": {"kpi": {"fy24": 114.6, "fy25": 105.9, "delta": -8.7}, "trend": [1.7, 90.1, 114.6, 105.9, 73.7], "ips": [{"name": "ブルーアーカイブ", "fy24": 5.72, "fy25": 10.47, "delta": 4.76}, {"name": "ホロライブ", "fy24": 6.16, "fy25": 4.4, "delta": -1.76}, {"name": "初音ミク", "fy24": 3.87, "fy25": 6.26, "delta": 2.39}, {"name": "グリッドマンU", "fy24": 7.17, "fy25": 1.1, "delta": -6.07}, {"name": "ウマ娘", "fy24": 3.34, "fy25": 3.54, "delta": 0.2}, {"name": "ぼっち・ざ・ろっく！", "fy24": 3.77, "fy25": 2.24, "delta": -1.54}, {"name": "Fate/GO", "fy24": 1.7, "fy25": 3.12, "delta": 1.41}, {"name": "Blythe", "fy24": 2.64, "fy25": 1.9, "delta": -0.74}], "brands": [{"name": "ねんどろいど", "fy24": 47.7, "fy25": 34.59, "delta": -13.1}, {"name": "スケール", "fy24": 22.6, "fy25": 22.69, "delta": 0.09}, {"name": "メカスマ", "fy24": 23.64, "fy25": 22.75, "delta": -0.9}, {"name": "POP UP PARADE", "fy24": 11.32, "fy25": 12.29, "delta": 0.98}, {"name": "ぬいぐるみ", "fy24": 4.02, "fy25": 7.5, "delta": 3.49}, {"name": "Hello!", "fy24": 3.0, "fy25": 2.3, "delta": -0.7}, {"name": "figma", "fy24": 0.87, "fy25": 0.44, "delta": -0.43}, {"name": "ブラインドBOX", "fy24": 0.45, "fy25": 1.79, "delta": 1.34}], "regions": []}, "中国": {"kpi": {"fy24": 36.6, "fy25": 46.1, "delta": 9.5}, "trend": [1.5, 17.2, 36.6, 46.1, 36.8], "ips": [{"name": "初音ミク", "fy24": 2.88, "fy25": 5.97, "delta": 3.08}, {"name": "BanG Dream!", "fy24": 1.01, "fy25": 5.9, "delta": 4.89}, {"name": "ブルーアーカイブ", "fy24": 2.47, "fy25": 3.92, "delta": 1.45}, {"name": "ぼっち・ざ・ろっく！", "fy24": 1.98, "fy25": 1.38, "delta": -0.6}, {"name": "エヴァ", "fy24": 1.33, "fy25": 1.37, "delta": 0.04}, {"name": "ハイキュー", "fy24": 1.77, "fy25": 0.79, "delta": -0.98}, {"name": "フリーレン", "fy24": 0.62, "fy25": 1.38, "delta": 0.77}, {"name": "Fate/GO", "fy24": 0.61, "fy25": 1.34, "delta": 0.73}], "brands": [{"name": "ねんどろいど", "fy24": 15.6, "fy25": 13.71, "delta": -1.89}, {"name": "スケール", "fy24": 9.18, "fy25": 13.1, "delta": 3.91}, {"name": "メカスマ", "fy24": 3.52, "fy25": 3.87, "delta": 0.34}, {"name": "POP UP PARADE", "fy24": 5.49, "fy25": 5.38, "delta": -0.11}, {"name": "ぬいぐるみ", "fy24": 1.41, "fy25": 6.66, "delta": 5.25}, {"name": "Hello!", "fy24": 0.81, "fy25": 2.17, "delta": 1.35}, {"name": "figma", "fy24": 0.33, "fy25": 0.29, "delta": -0.04}, {"name": "ブラインドBOX", "fy24": 0.09, "fy25": 0.51, "delta": 0.42}], "regions": []}, "台湾": {"kpi": {"fy24": 15.0, "fy25": 12.8, "delta": -2.2}, "trend": [0.4, 10.9, 15.0, 12.8, 12.4], "ips": [{"name": "ホロライブ", "fy24": 1.04, "fy25": 0.98, "delta": -0.06}, {"name": "ブルーアーカイブ", "fy24": 0.55, "fy25": 1.03, "delta": 0.48}, {"name": "初音ミク", "fy24": 0.55, "fy25": 0.95, "delta": 0.4}, {"name": "ダ・ガーン", "fy24": 0.71, "fy25": 0.15, "delta": -0.56}, {"name": "フリーレン", "fy24": 0.35, "fy25": 0.5, "delta": 0.15}, {"name": "BanG Dream!", "fy24": 0.08, "fy25": 0.73, "delta": 0.65}, {"name": "ぼっち・ざ・ろっく！", "fy24": 0.46, "fy25": 0.32, "delta": -0.14}, {"name": "ハイキュー", "fy24": 0.45, "fy25": 0.26, "delta": -0.19}], "brands": [{"name": "ねんどろいど", "fy24": 6.42, "fy25": 4.01, "delta": -2.41}, {"name": "スケール", "fy24": 2.31, "fy25": 2.34, "delta": 0.03}, {"name": "メカスマ", "fy24": 2.94, "fy25": 2.39, "delta": -0.55}, {"name": "POP UP PARADE", "fy24": 2.47, "fy25": 2.14, "delta": -0.34}, {"name": "ぬいぐるみ", "fy24": 0.3, "fy25": 1.07, "delta": 0.77}, {"name": "Hello!", "fy24": 0.26, "fy25": 0.32, "delta": 0.06}, {"name": "figma", "fy24": 0.07, "fy25": 0.04, "delta": -0.03}, {"name": "ブラインドBOX", "fy24": 0.05, "fy25": 0.31, "delta": 0.26}], "regions": []}, "韓国": {"kpi": {"fy24": 11.4, "fy25": 14.1, "delta": 2.7}, "trend": [0.3, 6.0, 11.4, 14.1, 16.1], "ips": [{"name": "ブルーアーカイブ", "fy24": 1.35, "fy25": 2.38, "delta": 1.04}, {"name": "ダ・ガーン", "fy24": 1.51, "fy25": 0.48, "delta": -1.04}, {"name": "初音ミク", "fy24": 0.42, "fy25": 1.27, "delta": 0.85}, {"name": "ファイバード", "fy24": 0.0, "fy25": 1.39, "delta": 1.39}, {"name": "ぼっち・ざ・ろっく！", "fy24": 0.62, "fy25": 0.64, "delta": 0.02}, {"name": "マイトガイン", "fy24": 0.83, "fy25": 0.38, "delta": -0.45}, {"name": "ホロライブ", "fy24": 0.39, "fy25": 0.28, "delta": -0.11}, {"name": "ウマ娘", "fy24": 0.32, "fy25": 0.33, "delta": 0.01}], "brands": [{"name": "ねんどろいど", "fy24": 5.17, "fy25": 5.63, "delta": 0.46}, {"name": "スケール", "fy24": 0.78, "fy25": 2.24, "delta": 1.47}, {"name": "メカスマ", "fy24": 4.09, "fy25": 3.91, "delta": -0.18}, {"name": "POP UP PARADE", "fy24": 0.82, "fy25": 0.89, "delta": 0.07}, {"name": "ぬいぐるみ", "fy24": 0.22, "fy25": 0.52, "delta": 0.29}, {"name": "Hello!", "fy24": 0.27, "fy25": 0.41, "delta": 0.14}, {"name": "figma", "fy24": 0.03, "fy25": 0.03, "delta": -0.0}, {"name": "ブラインドBOX", "fy24": 0.02, "fy25": 0.26, "delta": 0.24}], "regions": []}, "アメリカ": {"kpi": {"fy24": 22.2, "fy25": 19.7, "delta": -2.6}, "trend": [0.8, 21.3, 22.2, 19.7, 11.9], "ips": [{"name": "初音ミク", "fy24": 1.23, "fy25": 2.36, "delta": 1.12}, {"name": "フリーレン", "fy24": 0.74, "fy25": 0.7, "delta": -0.04}, {"name": "ダンジョン飯", "fy24": 0.56, "fy25": 0.43, "delta": -0.13}, {"name": "ブルーアーカイブ", "fy24": 0.35, "fy25": 0.51, "delta": 0.16}, {"name": "ホロライブ", "fy24": 0.51, "fy25": 0.33, "delta": -0.18}, {"name": "エヴァ", "fy24": 0.57, "fy25": 0.23, "delta": -0.34}, {"name": "ぼっち・ざ・ろっく！", "fy24": 0.55, "fy25": 0.15, "delta": -0.4}, {"name": "呪術廻戦", "fy24": 0.54, "fy25": 0.15, "delta": -0.39}], "brands": [{"name": "ねんどろいど", "fy24": 12.17, "fy25": 10.31, "delta": -1.87}, {"name": "スケール", "fy24": 1.74, "fy25": 2.43, "delta": 0.69}, {"name": "メカスマ", "fy24": 0.72, "fy25": 0.75, "delta": 0.03}, {"name": "POP UP PARADE", "fy24": 5.81, "fy25": 4.16, "delta": -1.65}, {"name": "ぬいぐるみ", "fy24": 0.9, "fy25": 1.22, "delta": 0.32}, {"name": "Hello!", "fy24": 0.44, "fy25": 0.26, "delta": -0.18}, {"name": "figma", "fy24": 0.35, "fy25": 0.29, "delta": -0.06}, {"name": "ブラインドBOX", "fy24": 0.05, "fy25": 0.14, "delta": 0.1}], "regions": []}, "ヨーロッパ": {"kpi": {"fy24": 6.8, "fy25": 7.2, "delta": 0.4}, "trend": [0.3, 7.1, 6.8, 7.2, 5.3], "ips": [{"name": "初音ミク", "fy24": 0.26, "fy25": 0.81, "delta": 0.55}, {"name": "フリーレン", "fy24": 0.18, "fy25": 0.29, "delta": 0.11}, {"name": "呪術廻戦", "fy24": 0.15, "fy25": 0.24, "delta": 0.1}, {"name": "薬屋のひとりごと", "fy24": 0.11, "fy25": 0.22, "delta": 0.12}, {"name": "エヴァ", "fy24": 0.2, "fy25": 0.11, "delta": -0.08}, {"name": "HxH", "fy24": 0.26, "fy25": 0.02, "delta": -0.24}, {"name": "ホロライブ", "fy24": 0.14, "fy25": 0.13, "delta": -0.01}, {"name": "ミクGT", "fy24": 0.09, "fy25": 0.15, "delta": 0.06}], "brands": [{"name": "ねんどろいど", "fy24": 2.25, "fy25": 2.47, "delta": 0.22}, {"name": "スケール", "fy24": 0.79, "fy25": 1.06, "delta": 0.28}, {"name": "メカスマ", "fy24": 0.27, "fy25": 0.46, "delta": 0.2}, {"name": "POP UP PARADE", "fy24": 3.38, "fy25": 2.93, "delta": -0.44}, {"name": "ぬいぐるみ", "fy24": 0.0, "fy25": 0.01, "delta": 0.01}, {"name": "Hello!", "fy24": 0.04, "fy25": 0.05, "delta": 0.0}, {"name": "figma", "fy24": 0.04, "fy25": 0.06, "delta": 0.03}, {"name": "ブラインドBOX", "fy24": 0.01, "fy25": 0.09, "delta": 0.08}], "regions": []}, "その他": {"kpi": {"fy24": 15.2, "fy25": 14.2, "delta": -1.0}, "trend": [1.0, 12.8, 15.2, 14.2, 11.6], "ips": [{"name": "初音ミク", "fy24": 0.8, "fy25": 1.72, "delta": 0.92}, {"name": "ブルーアーカイブ", "fy24": 0.55, "fy25": 0.81, "delta": 0.26}, {"name": "ホロライブ", "fy24": 0.69, "fy25": 0.41, "delta": -0.27}, {"name": "フリーレン", "fy24": 0.48, "fy25": 0.53, "delta": 0.05}, {"name": "ぼっち・ざ・ろっく！", "fy24": 0.49, "fy25": 0.25, "delta": -0.24}, {"name": "呪術廻戦", "fy24": 0.48, "fy25": 0.15, "delta": -0.33}, {"name": "エヴァ", "fy24": 0.34, "fy25": 0.17, "delta": -0.17}, {"name": "Fate/GO", "fy24": 0.18, "fy25": 0.28, "delta": 0.09}], "brands": [{"name": "ねんどろいど", "fy24": 8.35, "fy25": 6.68, "delta": -1.67}, {"name": "スケール", "fy24": 1.97, "fy25": 2.57, "delta": 0.59}, {"name": "メカスマ", "fy24": 1.27, "fy25": 0.98, "delta": -0.29}, {"name": "POP UP PARADE", "fy24": 2.7, "fy25": 2.57, "delta": -0.14}, {"name": "ぬいぐるみ", "fy24": 0.41, "fy25": 0.72, "delta": 0.31}, {"name": "Hello!", "fy24": 0.18, "fy25": 0.21, "delta": 0.02}, {"name": "figma", "fy24": 0.08, "fy25": 0.08, "delta": -0.01}, {"name": "ブラインドBOX", "fy24": 0.13, "fy25": 0.26, "delta": 0.13}], "regions": []}}};
+const SEL = {type:'', name:''}; // ドリルダウン選択
+const C = {};
+
+function filtBrands() {
+  let list = DATA.brands;
+  if(F.brand)   list = list.filter(b => b.name === F.brand);
+  if(F.segment) list = list.filter(b => (SEG_BRAND[F.segment]||[]).includes(b.name));
+  return list;
+}
+function filtRegions()  { return F.region  ? DATA.regions.filter(r=>r.name===F.region) : DATA.regions; }
+function filtSegments() { return F.segment ? DATA.segments.filter(s=>s.name===F.segment): DATA.segments; }
+
+const TOOLTIP = {backgroundColor:'#fff',borderColor:'#e2e8f0',textStyle:{fontSize:10,color:'#1e293b'}};
+
+function renderTrend() {
+  C.trend.setOption({
+    grid:{top:24,right:16,bottom:28,left:44},
+    legend:{top:0,right:0,textStyle:{fontSize:9},itemWidth:12,itemHeight:7,data:['実績','計画','2027/28年目標']},
+    xAxis:{type:'category',data:DATA.sales.years,axisLabel:{fontSize:10,color:'#374151'},axisLine:{lineStyle:{color:'#e2e8f0'}}},
+    yAxis:{type:'value',name:'億円',nameTextStyle:{fontSize:9,color:'#94a3b8'},axisLabel:{fontSize:9,color:'#94a3b8'},splitLine:{lineStyle:{color:'#f1f5f9'}},min:0,max:450},
+    tooltip:{trigger:'axis',...TOOLTIP,formatter:params=>{let s=`<b>${params[0].axisValue}</b><br/>`;params.forEach(p=>{if(p.value!=null)s+=`${p.marker}${p.seriesName}: <b>${p.value}億円</b><br/>`;});return s;}},
+    series:[
+      {name:'実績',type:'line',data:[207,222,230,null,null,null],symbol:'circle',symbolSize:6,lineStyle:{color:'#3b82f6',width:2.5},itemStyle:{color:'#3b82f6'},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(59,130,246,.12)'},{offset:1,color:'rgba(59,130,246,.01)'}]}}},
+      {name:'計画',type:'line',data:[null,null,230,250,null,null],lineStyle:{color:'#94a3b8',type:'dashed',width:1.5},itemStyle:{color:'#94a3b8'},symbol:'circle',symbolSize:5},
+      {name:'2027/28年目標',type:'line',data:[null,null,null,null,317,400],lineStyle:{color:'#e74c3c',width:2.5},itemStyle:{color:'#e74c3c'},symbol:'diamond',symbolSize:8,
+       markPoint:{data:[{coord:['2026',110.9],value:'110.9',symbol:'circle',symbolSize:10,itemStyle:{color:'#f97316'},label:{fontSize:9,color:'#fff'}}]}},
+    ]
+  });
+}
+
+function renderBrand() {
+  const brands = [...filtBrands()].sort((a,b)=>b.fy25-a.fy25);
+  const lbl = F.brand||F.segment||null;
+  const tag = document.getElementById('tagBrand');
+  tag.textContent = lbl||'億円'; tag.className='ctag'+(lbl?' on':'');
+  C.brand.setOption({
+    grid:{top:24,right:10,bottom:6,left:96},
+    legend:{top:0,right:0,textStyle:{fontSize:9},itemWidth:10,itemHeight:7,data:['2025年実績','2027年目標','2028年目標']},
+    xAxis:{type:'value',axisLabel:{fontSize:9,color:'#94a3b8',formatter:v=>v+'億'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    yAxis:{type:'category',data:brands.map(b=>b.name),axisLabel:{fontSize:10,color:'#374151'}},
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...TOOLTIP},
+    series:[
+      {name:'2025年実績',type:'bar',data:brands.map(b=>b.fy25),barMaxWidth:11,itemStyle:{color:'#3b82f6',borderRadius:2}},
+      {name:'2027年目標',type:'bar',data:brands.map(b=>b.fy27),barMaxWidth:11,itemStyle:{color:'#93c5fd',borderRadius:2}},
+      {name:'2028年目標',type:'bar',data:brands.map(b=>b.fy28),barMaxWidth:11,itemStyle:{color:'#dbeafe',borderRadius:2}},
+    ]
+  },true);
+}
+
+function renderBrandRank() {
+  const el=document.getElementById('brandRank'); el.innerHTML='';
+  const sorted=[...filtBrands()].map(b=>({...b,r27:Math.round(b.fy25/b.fy27*100),r28:Math.round(b.fy25/b.fy28*100)})).sort((a,b)=>b.r27-a.r27);
+  sorted.forEach((b,i)=>{
+    const col=b.r27>=80?'#22c55e':b.r27>=50?'#f97316':'#ef4444';
+    const w27=Math.min(b.r27,100),w28=Math.min(b.r28,100);
+    const row=document.createElement('div'); row.className='rkrow';
+    row.style.cursor='pointer';
+    row.addEventListener('click',()=>applyDrill('brand',b.name));
+    row.innerHTML=`<span class="rnn ${i<3?'hi':''}">${i+1}</span><span class="rnm" title="${b.name}">${b.name}</span>
+      <div class="rbar">
+        <div style="position:absolute;top:0;left:0;width:${w27}%;height:100%;background:#3b82f6;border-radius:3px;opacity:.85;"></div>
+        <div style="position:absolute;top:25%;left:0;width:${w28}%;height:50%;background:#bfdbfe;border-radius:3px;opacity:.7;"></div>
+        <span style="position:absolute;right:3px;top:0;font-size:8px;font-weight:700;color:${col};line-height:8px;">${b.r27}%</span>
+      </div>
+      <span class="rpct" style="color:${col};">${b.mult}</span>`;
+    el.appendChild(row);
+  });
+}
+
+function renderIP(overrideData) {
+  const sorted = overrideData
+    ? [...overrideData]
+    : [...DATA.ips].sort((a,b)=>b.fy25-a.fy25);
+  const sel = overrideData ? '' : F.ip;
+  C.ip.setOption({
+    grid:{top:4,right:38,bottom:6,left:118},
+    xAxis:{type:'value',axisLabel:{fontSize:9,color:'#94a3b8',formatter:v=>v+'億'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    yAxis:{type:'category',data:sorted.map(d=>d.name),
+      axisLabel:{fontSize:9,color:p=>(!sel||sorted[p]?.name===sel)?'#374151':'#cbd5e1'}},
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...TOOLTIP,formatter:params=>{const d=sorted.find(x=>x.name===params[0]?.axisValue)||{};const s=d.delta>=0?'+':'';return `<b>${d.name}</b><br/>2024: ${d.fy24}億<br/>2025: ${d.fy25}億<br/>差: <b style="color:${d.delta>=0?'#22c55e':'#ef4444'}">${s}${d.delta.toFixed(2)}億</b>`;}},
+    series:[
+      {name:'2024',type:'bar',barMaxWidth:9,
+       data:sorted.map(d=>({value:d.fy24,itemStyle:{color:(!sel||d.name===sel)?'#e2e8f0':'rgba(226,232,240,0.25)',borderRadius:2}}))},
+      {name:'2025',type:'bar',barMaxWidth:9,
+       data:sorted.map(d=>({value:d.fy25,itemStyle:{color:(!sel||d.name===sel)?(d.delta>=0?'#22c55e':'#ef4444'):'rgba(226,232,240,0.25)',borderRadius:2}})),
+       label:{show:true,position:'right',fontSize:8,
+        formatter:p=>{const d=sorted[p.dataIndex];return `${d.delta>=0?'▲':'▼'}${Math.abs(d.delta).toFixed(1)}`;},
+        color:p=>{const d=sorted[p.dataIndex];return(!sel||d.name===sel)?(d.delta>=0?'#22c55e':'#ef4444'):'#e2e8f0';}}},
+    ]
+  },true);
+}
+
+function renderRegion(overrideData) {
+  const regions = overrideData
+    ? [...overrideData].sort((a,b)=>b.fy25-a.fy25)
+    : [...filtRegions()].sort((a,b)=>b.fy25-a.fy25);
+  const tag=document.getElementById('tagReg');
+  if (!overrideData) { tag.textContent=F.region||'全地域'; tag.className='ctag'+(F.region?' on':''); }
+  C.region.setOption({
+    grid:{top:4,right:50,bottom:6,left:72},
+    xAxis:{type:'value',max:F.region?undefined:62,axisLabel:{fontSize:9,color:'#94a3b8',formatter:v=>v+'%'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    yAxis:{type:'category',data:regions.map(d=>d.name),axisLabel:{fontSize:9,color:'#374151'}},
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...TOOLTIP,formatter:params=>{const d=regions.find(x=>x.name===params[0]?.axisValue)||{};const s=d.delta>=0?'+':'';return `<b>${d.name}</b><br/>23年: ${d.fy23}%<br/>25年: ${d.fy25}%<br/>変化: <b style="color:${d.delta>=0?'#22c55e':'#ef4444'}">${s}${d.delta}pt</b>`;}},
+    series:[
+      {name:'2023年',type:'bar',data:regions.map(d=>d.fy23),barMaxWidth:9,itemStyle:{color:'#e2e8f0',borderRadius:2}},
+      {name:'2025年',type:'bar',data:regions.map(d=>d.fy25),barMaxWidth:9,
+       itemStyle:{color:p=>regions[p.dataIndex].delta>=0?'#3b82f6':'#94a3b8',borderRadius:2},
+       label:{show:true,position:'right',fontSize:8,formatter:p=>{const d=regions[p.dataIndex];return `${d.delta>0?'+':''}${d.delta}pt`;},color:p=>regions[p.dataIndex].delta>0?'#3b82f6':'#ef4444'}},
+    ]
+  },true);
+}
+
+function renderSegment() {
+  const segs=[...filtSegments()].sort((a,b)=>b.gross-a.gross);
+  const tag=document.getElementById('tagSeg'); tag.textContent=F.segment||'全セグメント'; tag.className='ctag'+(F.segment?' on':'');
+  C.segment.setOption({
+    grid:{top:4,right:10,bottom:32,left:10},
+    xAxis:{type:'category',data:segs.map(d=>d.name),axisLabel:{fontSize:9,color:'#374151',interval:0,rotate:segs.length>3?10:0},axisLine:{lineStyle:{color:'#e2e8f0'}}},
+    yAxis:{type:'value',name:'粗利率%',nameTextStyle:{fontSize:9,color:'#94a3b8'},max:50,axisLabel:{fontSize:9,color:'#94a3b8',formatter:v=>v+'%'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    tooltip:{trigger:'item',...TOOLTIP,formatter:p=>`<b>${p.name}</b><br/>粗利率: <b>${p.value}%</b><br/>3年累計: ${DATA.segments.find(d=>d.name===p.name)?.rev}億円`},
+    series:[{type:'bar',barMaxWidth:40,
+      data:segs.map(d=>({value:d.gross,itemStyle:{color:d.gross>=30?'#22c55e':d.gross>=20?'#3b82f6':'#94a3b8',borderRadius:[4,4,0,0]}})),
+      label:{show:true,position:'top',fontSize:10,fontWeight:700,formatter:p=>p.value+'%'},
+      markLine:segs.length>1?{silent:true,data:[{yAxis:30,lineStyle:{color:'#f59e0b',type:'dashed',width:1.5},label:{formatter:'目標 30%',fontSize:9,color:'#f59e0b'}}]}:{}}]
+  },true);
+}
+
+function renderGauge() {
+  C.gauge.setOption({
+    series:[{type:'gauge',radius:'92%',center:['50%','72%'],startAngle:180,endAngle:0,min:0,max:100,
+      progress:{show:true,width:9,roundCap:true,itemStyle:{color:{type:'linear',x:0,y:0,x2:1,y2:0,colorStops:[{offset:0,color:'#fbbf24'},{offset:1,color:'#f97316'}]}}},
+      axisLine:{lineStyle:{width:9,color:[[1,'#f1f5f9']]}},
+      axisTick:{show:false},splitLine:{show:false},axisLabel:{show:false},pointer:{show:false},title:{show:false},
+      detail:{valueAnimation:true,formatter:'{value}%',offsetCenter:[0,'-12%'],fontSize:16,fontWeight:800,color:'#f97316'},
+      data:[{value:44.3}]}]
+  });
+}
+
+function renderSummaryBrand() {
+  const brands=[...DATA.brands].sort((a,b)=>(b.fy28-b.fy25)-(a.fy28-a.fy25));
+  C.summaryBrand.setOption({
+    grid:{top:4,right:130,bottom:6,left:105},
+    xAxis:{type:'value',axisLabel:{fontSize:9,color:'#94a3b8',formatter:v=>v+'億'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    yAxis:{type:'category',data:brands.map(b=>b.name),axisLabel:{fontSize:10,color:'#374151'}},
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...TOOLTIP,formatter:params=>{const b=brands.find(x=>x.name===params[0]?.axisValue)||{};return `<b>${b.name}</b><br/>25年: ${b.fy25}億<br/>28年目標: ${b.fy28}億<br/>成長必要額: +${(b.fy28-b.fy25).toFixed(1)}億 (${b.mult})`;}},
+    series:[
+      {name:'2025年実績',type:'bar',stack:'s',data:brands.map(b=>b.fy25),barWidth:16,itemStyle:{color:'#3b82f6',borderRadius:0}},
+      {name:'成長必要額',type:'bar',stack:'s',data:brands.map(b=>+(b.fy28-b.fy25).toFixed(1)),barWidth:16,
+       itemStyle:{color:'#bfdbfe',borderRadius:[0,3,3,0]},
+       label:{show:true,position:'right',fontSize:9,fontWeight:700,formatter:p=>{const b=brands[p.dataIndex];return `+${(b.fy28-b.fy25).toFixed(1)}億 (${b.mult})`;},color:'#1d4ed8'}},
+    ]
+  });
+}
+
+// ── フィルター：セグメントはブランドチャート・ランキングにも連動 ──
+document.getElementById('fltSeg').addEventListener('change', function(){
+  F.segment=this.value;
+  this.className='fs'+(this.value?' on':'');
+  renderSegment(); renderBrand(); renderBrandRank();
+});
+// ── フィルター：ブランドはチャート・ランキングに連動 ──
+document.getElementById('fltBrand').addEventListener('change', function(){
+  F.brand=this.value;
+  this.className='fs'+(this.value?' on':'');
+  renderBrand(); renderBrandRank();
+});
+// ── フィルター：地域はチャートに連動 ──
+document.getElementById('fltReg').addEventListener('change', function(){
+  F.region=this.value;
+  this.className='fs'+(this.value?' on':'');
+  renderRegion();
+});
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', function(){
+    const t=this.dataset.tab;
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('view-detail').style.display  = t==='detail'  ?'flex':'none';
+    document.getElementById('view-summary').style.display = t==='summary' ?'flex':'none';
+    setTimeout(()=>Object.values(C).forEach(c=>c?.resize?.()), 60);
+  });
+});
+
+function initAll(){
+  C.trend        = echarts.init(document.getElementById('chartTrend'));
+  C.brand        = echarts.init(document.getElementById('chartBrand'));
+  C.ip           = echarts.init(document.getElementById('chartIP'));
+  C.region       = echarts.init(document.getElementById('chartRegion'));
+  C.segment      = echarts.init(document.getElementById('chartSegment'));
+  C.gauge        = echarts.init(document.getElementById('chartGauge'));
+  C.summaryBrand = echarts.init(document.getElementById('chartSummaryBrand'));
+  renderTrend(); renderBrand(); renderBrandRank();
+  renderIP(); renderRegion(); renderSegment();
+  renderGauge(); renderSummaryBrand();
+  bindClicks();
+}
+
+// ── クリック共通ヘルパー ──
+function selectBrand(name) {
+  const sel = document.getElementById('fltBrand');
+  const val = F.brand === name ? '' : name;
+  sel.value = val; sel.className = 'fs'+(val?' on':'');
+  F.brand = val; renderBrand(); renderBrandRank();
+}
+function selectRegion(name) {
+  const sel = document.getElementById('fltReg');
+  const val = F.region === name ? '' : name;
+  sel.value = val; sel.className = 'fs'+(val?' on':'');
+  F.region = val; renderRegion();
+}
+function selectSegment(name) {
+  const sel = document.getElementById('fltSeg');
+  const val = F.segment === name ? '' : name;
+  sel.value = val; sel.className = 'fs'+(val?' on':'');
+  F.segment = val; renderSegment(); renderBrand(); renderBrandRank();
+}
+function selectIP(name) {
+  F.ip = F.ip === name ? '' : name;
+  renderIP();
+  const badge = document.getElementById('ipSelBadge');
+  if (F.ip) {
+    badge.textContent = '✕ ' + F.ip + ' 選択中';
+    badge.style.display = ''; badge.className = 'ctag on';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+
+
+
+// ═══════════════════════════════════════════════════════
+// ドリルダウン：クリックで全グラフ完全連動
+// ═══════════════════════════════════════════════════════
+const TREND_COLORS = {brand:'#f59e0b', ip:'#a855f7', region:'#22c55e'};
+
+function applyDrill(type, name) {
+  if (SEL.type === type && SEL.name === name) { clearDrill(); return; }
+  SEL.type = type; SEL.name = name;
+  const d = DRILL[type + 's']?.[name];
+  if (!d) { clearDrill(); return; }
+
+  // コンテキストバー表示
+  const col = TREND_COLORS[type];
+  const label = {brand:'ブランド', ip:'IP', region:'地域'}[type] || '';
+  const kpi = d.kpi || {};
+  const kpiStr = kpi.fy25 != null
+    ? `　2024: ${kpi.fy24}億　▶　2025: ${kpi.fy25}億　（${kpi.delta >= 0 ? '+' : ''}${kpi.delta}億）`
+    : '';
+  const badge = document.getElementById('drillBadge');
+  badge.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0;"></span>&nbsp;<b>${label}: ${name}</b>${kpiStr}&nbsp;&nbsp;✕ 解除`;
+  badge.style.display = 'flex';
+
+  // ① トレンド：全社線を維持しつつ選択項目を重ねる
+  try {
+    const tr = d.trend || [];
+    C.trend.setOption({
+      legend: {data: ['実績','計画','2027/28年目標', name]},
+      series: [{}, {}, {},
+        {name, type:'line',
+         data: [null, tr[1]??null, tr[2]??null, tr[3]??null, null, null],
+         lineStyle:{color:col, width:2.5, type:'dashed'},
+         itemStyle:{color:col}, symbol:'circle', symbolSize:6,
+         label:{show:true, position:'top', fontSize:9, fontWeight:700, color:col,
+                formatter: p => p.value != null ? p.value + '億' : ''}}
+      ]
+    });
+  } catch(e){ console.error('drill①trend', e); }
+
+    // ② IP ランキング（確実に動く: renderIP/renderBrandに委譲）
+  try {
+    const ipItems  = (type === 'ip') ? (d.brands||[]) : (d.ips||[]);
+    if (ipItems.length > 0) renderIP(ipItems);
+  } catch(e){ console.error('drill②ip', e); }
+
+  // ③ ブランドチャート
+  try {
+    if (type === 'brand') {
+      // 選択ブランドをハイライト、他フェード
+      const all = [...filtBrands()].sort((a,b)=>b.fy25-a.fy25);
+      C.brand.setOption({
+        grid:{top:24,right:10,bottom:6,left:96},
+        legend:{top:0,right:0,textStyle:{fontSize:9},itemWidth:10,itemHeight:7,data:['2025年実績','2027年目標','2028年目標']},
+        xAxis:{type:'value',axisLabel:{fontSize:9,color:'#94a3b8',formatter:v=>v+'億'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+        yAxis:{type:'category',data:all.map(b=>b.name),axisLabel:{fontSize:10,color:'#374151'}},
+        tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...TOOLTIP},
+        series:[
+          {name:'2025年実績',type:'bar',barMaxWidth:11,data:all.map(b=>({value:b.fy25,itemStyle:{color:b.name===name?'#3b82f6':'rgba(147,197,253,0.25)',borderRadius:2}}))},
+          {name:'2027年目標',type:'bar',barMaxWidth:11,data:all.map(b=>({value:b.fy27,itemStyle:{color:b.name===name?'#93c5fd':'rgba(219,234,254,0.2)',borderRadius:2}}))},
+          {name:'2028年目標',type:'bar',barMaxWidth:11,data:all.map(b=>({value:b.fy28,itemStyle:{color:b.name===name?'#dbeafe':'rgba(219,234,254,0.15)',borderRadius:2}}))}
+        ]
+      }, true);
+    } else {
+      const blist = [...(d.brands||[])].sort((a,b)=>b.fy25-a.fy25);
+      if (blist.length > 0) {
+        C.brand.setOption({
+          grid:{top:24,right:10,bottom:6,left:96},
+          legend:{top:0,right:0,textStyle:{fontSize:9},itemWidth:10,itemHeight:7,data:['2024年実績','2025年実績']},
+          xAxis:{type:'value',axisLabel:{fontSize:9,color:'#94a3b8',formatter:v=>v+'億'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
+          yAxis:{type:'category',data:blist.map(b=>b.name),axisLabel:{fontSize:10,color:'#374151'}},
+          tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...TOOLTIP},
+          series:[
+            {name:'2024年実績',type:'bar',barMaxWidth:11,data:blist.map(b=>b.fy24),itemStyle:{color:'#93c5fd',borderRadius:2}},
+            {name:'2025年実績',type:'bar',barMaxWidth:11,
+             data:blist.map(b=>({value:b.fy25,itemStyle:{color:(b.delta||0)>=0?'#3b82f6':'#94a3b8',borderRadius:2}})),
+             label:{show:true,position:'right',fontSize:8,formatter:p=>{const v=blist[p.dataIndex];return `${(v.delta||0)>=0?'+':''}${(v.delta||0).toFixed(1)}`;},color:'#1e293b'}}
+          ]
+        }, true);
+      }
+    }
+  } catch(e){ console.error('drill③brand', e); }
+
+  // ④ 地域チャート（確実に動く: renderRegion に委譲）
+  try {
+    if (type !== 'region') {
+      const regs = (d.regions||[]).filter(r=>(r.fy25||0)>0||(r.fy23||0)>0);
+      if (regs.length > 0) {
+        renderRegion(regs);
+        const t = document.getElementById('tagReg');
+        if (t) { t.textContent = name + ' 地域シェア'; t.className = 'ctag on'; }
+      }
+    } else {
+      // 地域選択→その地域をハイライト（既存 renderRegion のまま+色変え）
+      renderRegion();
+    }
+  } catch(e){ console.error('drill④region', e); }
+
+  // ⑤ セグメント：ブランド選択時のみ関連セグメントを強調
+  try {
+    if (type === 'brand') {
+      const relSegs = new Set();
+      for (const [s, bl] of Object.entries(SEG_BRAND)) { if (bl.includes(name)) relSegs.add(s); }
+      const segs = [...filtSegments()].sort((a,b)=>b.gross-a.gross);
+      C.segment.setOption({
+        grid:  {top:4, right:10, bottom:32, left:10},
+        xAxis: {type:'category', data:segs.map(d=>d.name),
+                axisLabel:{fontSize:9, color:'#374151', interval:0, rotate:segs.length>3?10:0},
+                axisLine:{lineStyle:{color:'#e2e8f0'}}},
+        yAxis: {type:'value', name:'粗利率%', nameTextStyle:{fontSize:9, color:'#94a3b8'}, max:50,
+                axisLabel:{fontSize:9, color:'#94a3b8', formatter:v=>v+'%'},
+                splitLine:{lineStyle:{color:'#f1f5f9'}}},
+        tooltip: {trigger:'item', ...TOOLTIP,
+                  formatter:p=>`<b>${p.name}</b><br/>粗利率: <b>${p.value}%</b>`},
+        series: [{type:'bar', barMaxWidth:40,
+          data: segs.map(sg=>({value:sg.gross, itemStyle:{
+            color: relSegs.has(sg.name)
+              ? (sg.gross>=30?'#22c55e':sg.gross>=20?'#3b82f6':'#94a3b8')
+              : 'rgba(226,232,240,0.4)',
+            borderRadius:[4,4,0,0]}})),
+          label:{show:true, position:'top', fontSize:10, fontWeight:700, formatter:p=>p.value+'%'}}]
+      }, true);
+    }
+  } catch(e){ console.error('drill⑤segment', e); }
+}
+
+function clearDrill() {
+  SEL.type = ''; SEL.name = '';
+  try { document.getElementById('drillBadge').style.display = 'none'; } catch(_){}
+  try { const t=document.getElementById('tagReg'); if(t){t.textContent='全地域';t.className='ctag';} } catch(_){}
+  renderTrend(); renderBrand(); renderBrandRank();
+  renderIP(); renderRegion(); renderSegment();
+}
+
+function bindClicks() {
+  C.brand.on('click',   p => applyDrill('brand',  p.name));
+  C.ip.on('click',      p => applyDrill('ip',     p.name));
+  C.region.on('click',  p => applyDrill('region', p.name));
+  C.segment.on('click', p => { selectSegment(p.name); });
+  C.summaryBrand.on('click', p => applyDrill('brand', p.name));
+  // ブランドランキング行は renderBrandRank 内で設定済み
+  document.getElementById('drillBadge').addEventListener('click', clearDrill);
+  document.getElementById('ipSelBadge').addEventListener('click', clearDrill);
+  ['chartBrand','chartIP','chartRegion','chartSegment','chartSummaryBrand'].forEach(id => {
+    document.getElementById(id).style.cursor = 'pointer';
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initAll);
+window.addEventListener('resize', ()=>Object.values(C).forEach(c=>c?.resize?.()));
+</script>
+</body>
+</html>
