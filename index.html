@@ -293,15 +293,8 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
     </div>
 
     <div class="scard">
-      <div class="sctitle">成長ドライバー【2024→2025年】</div>
-      <div style="font-size:9px;color:#94a3b8;font-weight:700;text-transform:uppercase;margin-bottom:6px;">増収 TOP3</div>
-      <div class="iprow"><div><span style="background:#dcfce7;color:#16a34a;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px;">1</span><span class="ipnm">初音ミク</span></div><span class="ipdelta" style="color:#22c55e;">▲+9.32億</span></div>
-      <div class="iprow"><div><span style="background:#dcfce7;color:#16a34a;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px;">2</span><span class="ipnm">ブルーアーカイブ</span></div><span class="ipdelta" style="color:#22c55e;">▲+8.17億</span></div>
-      <div class="iprow"><div><span style="background:#dcfce7;color:#16a34a;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px;">3</span><span class="ipnm">BanG Dream!</span></div><span class="ipdelta" style="color:#22c55e;">▲+7.26億</span></div>
-      <div style="font-size:9px;color:#94a3b8;font-weight:700;text-transform:uppercase;margin:10px 0 6px;">要注意 IP</div>
-      <div class="iprow"><div><span style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px;">注</span><span class="ipnm">グリッドマンU</span></div><span class="ipdelta" style="color:#ef4444;">▼−6.97億</span></div>
-      <div class="iprow"><div><span style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px;">注</span><span class="ipnm">リコリス・リコイル</span></div><span class="ipdelta" style="color:#ef4444;">▼−4.39億</span></div>
-      <div class="iprow"><div><span style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px;">注</span><span class="ipnm">ぼっち・ざ・ろっく！</span></div><span class="ipdelta" style="color:#ef4444;">▼−2.91億</span></div>
+      <div class="sctitle">成長ドライバー【2024→2025年】<span style="font-size:8px;font-weight:400;color:#94a3b8;margin-left:6px;">↗クリックで詳細へ</span></div>
+      <div id="summaryDrivers"></div>
     </div>
 
     <div class="scard">
@@ -609,6 +602,32 @@ function updateKpiPanel(type, name) {
   }
 }
 
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.tab === name));
+  document.getElementById('view-detail').style.display  = name === 'detail'  ? 'flex' : 'none';
+  document.getElementById('view-summary').style.display = name === 'summary' ? 'flex' : 'none';
+  setTimeout(() => Object.values(C).forEach(c => c?.resize?.()), 60);
+}
+
+function renderSummaryDrivers() {
+  const el = document.getElementById('summaryDrivers');
+  if (!el) return;
+  const sorted = [...DATA.ips].sort((a,b) => b.delta - a.delta);
+  const top3 = sorted.slice(0, 3);
+  const bot3 = [...DATA.ips].sort((a,b) => a.delta - b.delta).slice(0, 3);
+  const makeRow = (ip, badge, bg, fc, dc) => {
+    const row = document.createElement('div');
+    row.className = 'iprow'; row.style.cursor = 'pointer';
+    row.innerHTML = `<div><span style="background:${bg};color:${fc};font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-right:4px;">${badge}</span><span class="ipnm">${ip.name}</span></div><span class="ipdelta" style="color:${dc};">${ip.delta>=0?'▲+':'▼'}${ip.delta.toFixed(2)}億</span>`;
+    row.addEventListener('click', () => { applyDrill('ip', ip.name); switchTab('detail'); });
+    return row;
+  };
+  el.innerHTML = '<div style="font-size:9px;color:#94a3b8;font-weight:700;text-transform:uppercase;margin-bottom:6px;">増収 TOP3</div>';
+  top3.forEach((ip,i) => el.appendChild(makeRow(ip, i+1, '#dcfce7', '#16a34a', '#22c55e')));
+  el.insertAdjacentHTML('beforeend','<div style="font-size:9px;color:#94a3b8;font-weight:700;text-transform:uppercase;margin:10px 0 6px;">要注意 IP</div>');
+  bot3.forEach(ip => el.appendChild(makeRow(ip, '注', '#fee2e2', '#dc2626', '#ef4444')));
+}
+
 function renderSummaryBrand() {
   const brands=[...DATA.brands].sort((a,b)=>(b.fy28-b.fy25)-(a.fy28-a.fy25));
   C.summaryBrand.setOption({
@@ -665,7 +684,7 @@ function initAll(){
   C.summaryBrand = echarts.init(document.getElementById('chartSummaryBrand'));
   renderTrend(); renderBrand(); renderBrandRank();
   renderIP(); renderRegion(); renderSegment();
-  renderGauge(); renderSummaryBrand();
+  renderGauge(); renderSummaryBrand(); renderSummaryDrivers();
   bindClicks();
 }
 
@@ -838,6 +857,19 @@ function applyDrill(type, name) {
 
   // ⑦ KPIカード＋ゲージ更新
   try { updateKpiPanel(type, name); } catch(e){ console.error('drill⑦kpi', e); }
+
+  // ⑧ SummaryBrandチャート連動
+  try {
+    if (type === 'brand' && C.summaryBrand) {
+      const brands = [...DATA.brands].sort((a,b)=>(b.fy28-b.fy25)-(a.fy28-a.fy25));
+      C.summaryBrand.setOption({series:[
+        {data: brands.map(b=>({value:b.fy25, itemStyle:{color: b.name===name?'#3b82f6':'rgba(59,130,246,0.2)'}}))},
+        {data: brands.map(b=>({value:+(b.fy28-b.fy25).toFixed(1), itemStyle:{color: b.name===name?'#93c5fd':'rgba(191,219,254,0.2)'}}))}
+      ]}, false);
+    } else if (C.summaryBrand) {
+      renderSummaryBrand();
+    }
+  } catch(e){ console.error('drill⑧summary', e); }
 }
 
 function clearDrill() {
@@ -860,6 +892,7 @@ function clearDrill() {
     setEl('gsub','計画進捗 44.3%');
     renderGauge();
   } catch(_){}
+  try { renderSummaryBrand(); } catch(_){}
 }
 
 function bindClicks() {
@@ -867,7 +900,7 @@ function bindClicks() {
   C.ip.on('click',      p => applyDrill('ip',     p.name));
   C.region.on('click',  p => applyDrill('region', p.name));
   C.segment.on('click', p => { selectSegment(p.name); });
-  C.summaryBrand.on('click', p => applyDrill('brand', p.name));
+  C.summaryBrand.on('click', p => { applyDrill('brand', p.name); switchTab('detail'); });
   // ブランドランキング行は renderBrandRank 内で設定済み
   document.getElementById('drillBadge').addEventListener('click', clearDrill);
   document.getElementById('ipSelBadge').addEventListener('click', clearDrill);
