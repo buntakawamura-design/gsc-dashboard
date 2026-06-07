@@ -194,27 +194,27 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
     <div class="rcol">
       <div style="background:#fff;border-radius:8px;border:1px solid #e2e8f0;overflow:hidden;">
         <div class="kpi3" id="kpi3">
-          <div class="kc"><div class="kc-lbl">2025年実績</div><div class="kc-val">230</div><div class="kc-sub">億円</div></div>
-          <div class="kc"><div class="kc-lbl">2027年目標</div><div class="kc-val">317</div><div class="kc-sub">億円</div></div>
-          <div class="kc"><div class="kc-lbl">2028年目標</div><div class="kc-val">400</div><div class="kc-sub">億円</div></div>
+          <div class="kc"><div class="kc-lbl" id="k1lbl">2025年実績</div><div class="kc-val" id="k1val">230</div><div class="kc-sub" id="k1sub">億円</div></div>
+          <div class="kc"><div class="kc-lbl" id="k2lbl">2027年目標</div><div class="kc-val" id="k2val">317</div><div class="kc-sub" id="k2sub">億円</div></div>
+          <div class="kc"><div class="kc-lbl" id="k3lbl">2028年目標</div><div class="kc-val" id="k3val">400</div><div class="kc-sub" id="k3sub">億円</div></div>
         </div>
         <div class="mets" id="metsBox">
-          <div class="met"><span class="mn">2027年ギャップ</span><span class="mv" style="color:#f97316;">87億円</span></div>
-          <div class="met"><span class="mn">2028年ギャップ</span><span class="mv" style="color:#ef4444;">170億円</span></div>
-          <div class="met"><span class="mn">最高粗利率</span><span class="mv" style="color:#22c55e;">40.0%</span></div>
-          <div class="met"><span class="mn">注力IP数</span><span class="mv" style="color:#3b82f6;">5 IP</span></div>
+          <div class="met"><span class="mn" id="m1n">2027年ギャップ</span><span class="mv" id="m1v" style="color:#f97316;">87億円</span></div>
+          <div class="met"><span class="mn" id="m2n">2028年ギャップ</span><span class="mv" id="m2v" style="color:#ef4444;">170億円</span></div>
+          <div class="met"><span class="mn" id="m3n">最高粗利率</span><span class="mv" id="m3v" style="color:#22c55e;">40.0%</span></div>
+          <div class="met"><span class="mn" id="m4n">注力IP数</span><span class="mv" id="m4v" style="color:#3b82f6;">5 IP</span></div>
         </div>
       </div>
 
       <div class="gcrd">
         <div class="ghdr" id="gaugeHdr">
           <div>
-            <div class="glbl">2026年 進捗（3月末）</div>
-            <div style="font-size:10px;color:#64748b;margin-top:3px;">計画 <b style="color:#1e293b;">250億円</b></div>
+            <div class="glbl" id="glabel">2026年 進捗（3月末）</div>
+            <div style="font-size:10px;color:#64748b;margin-top:3px;" id="gsub2">計画 <b style="color:#1e293b;">250億円</b></div>
           </div>
           <div style="text-align:right;">
-            <div class="gnum">110.9<span style="font-size:11px;font-weight:400;color:#94a3b8;">億</span></div>
-            <div class="gsub">計画進捗 44.3%</div>
+            <div class="gnum" id="gnum">110.9<span style="font-size:11px;font-weight:400;color:#94a3b8;">億</span></div>
+            <div class="gsub" id="gsub">計画進捗 44.3%</div>
           </div>
         </div>
         <div id="chartGauge"></div>
@@ -538,30 +538,36 @@ function renderGauge(pct) {
   });
 }
 
-function updateKpiPanel(type, name, d) {
-  const kpi3 = document.getElementById('kpi3');
-  const mets = document.getElementById('metsBox');
-  const ghdr = document.getElementById('gaugeHdr');
-  if (!kpi3 || !mets || !ghdr) return;
+function setEl(id, txt, col) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = txt;
+  if (col !== undefined) el.style.color = col;
+}
+function setElHTML(id, html) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = html;
+}
 
+function updateKpiPanel(type, name) {
   if (type === 'brand') {
     const b = DATA.brands.find(x => x.name === name) || {};
     const f25 = b.fy25 ?? '--', f27 = b.fy27 ?? '--', f28 = b.fy28 ?? '--';
-    const g27 = (f27 !== '--' && f25 !== '--') ? (f27 - f25).toFixed(1) : '--';
-    const g28 = (f28 !== '--' && f25 !== '--') ? (f28 - f25).toFixed(1) : '--';
+    const g27 = (f27 !== '--' && f25 !== '--') ? '+' + (f27 - f25).toFixed(1) + '億' : '--';
+    const g28 = (f28 !== '--' && f25 !== '--') ? '+' + (f28 - f25).toFixed(1) + '億' : '--';
     const pct27 = (f27 !== '--' && f25 !== '--') ? Math.round(f25 / f27 * 100) : 0;
     const col27 = pct27 >= 80 ? '#22c55e' : pct27 >= 60 ? '#f97316' : '#ef4444';
-    kpi3.innerHTML = `<div class="kc"><div class="kc-lbl">2025年実績</div><div class="kc-val">${f25}</div><div class="kc-sub">億円</div></div>
-      <div class="kc"><div class="kc-lbl">2027年目標</div><div class="kc-val">${f27}</div><div class="kc-sub">億円</div></div>
-      <div class="kc"><div class="kc-lbl">2028年目標</div><div class="kc-val">${f28}</div><div class="kc-sub">億円</div></div>`;
-    mets.innerHTML = `<div class="met"><span class="mn">2027年必要成長</span><span class="mv" style="color:#f97316;">+${g27}億</span></div>
-      <div class="met"><span class="mn">2028年必要成長</span><span class="mv" style="color:#ef4444;">+${g28}億</span></div>
-      <div class="met"><span class="mn">2027年達成率</span><span class="mv" style="color:${col27}">${pct27}%</span></div>
-      <div class="met"><span class="mn">目標倍率</span><span class="mv" style="color:#3b82f6;">${b.mult ?? '--'}</span></div>`;
-    ghdr.innerHTML = `<div><div class="glbl">${name} 2027年目標進捗</div>
-      <div style="font-size:10px;color:#64748b;margin-top:3px;">目標 <b style="color:#1e293b;">${f27}億円</b></div></div>
-      <div style="text-align:right;"><div class="gnum">${f25}<span style="font-size:11px;font-weight:400;color:#94a3b8;">億</span></div>
-      <div class="gsub">達成率 ${pct27}%</div></div>`;
+    setEl('k1lbl', '2025年実績'); setEl('k1val', String(f25)); setEl('k1sub', '億円'); document.getElementById('k1val').style.color = '';
+    setEl('k2lbl', '2027年目標'); setEl('k2val', String(f27)); setEl('k2sub', '億円'); document.getElementById('k2val').style.color = '';
+    setEl('k3lbl', '2028年目標'); setEl('k3val', String(f28)); setEl('k3sub', '億円'); document.getElementById('k3val').style.color = '';
+    setEl('m1n', '2027年必要成長'); setEl('m1v', g27, '#f97316');
+    setEl('m2n', '2028年必要成長'); setEl('m2v', g28, '#ef4444');
+    setEl('m3n', '2027年達成率');   setEl('m3v', pct27 + '%', col27);
+    setEl('m4n', '目標倍率');       setEl('m4v', String(b.mult ?? '--'), '#3b82f6');
+    setEl('glabel', name + ' 2027年目標進捗');
+    setElHTML('gsub2', '目標 <b style="color:#1e293b;">' + f27 + '億円</b>');
+    setElHTML('gnum', f25 + '<span style="font-size:11px;font-weight:400;color:#94a3b8;">億</span>');
+    setEl('gsub', '達成率 ' + pct27 + '%');
     renderGauge(pct27);
 
   } else if (type === 'ip') {
@@ -569,30 +575,36 @@ function updateKpiPanel(type, name, d) {
     const f24 = ip.fy24 ?? '--', f25 = ip.fy25 ?? '--', delta = ip.delta ?? 0;
     const pctYY = f24 !== '--' ? Math.round(f25 / f24 * 100) : 0;
     const dcol = delta >= 0 ? '#22c55e' : '#ef4444';
-    kpi3.innerHTML = `<div class="kc"><div class="kc-lbl">2024年実績</div><div class="kc-val">${f24}</div><div class="kc-sub">億円</div></div>
-      <div class="kc"><div class="kc-lbl">2025年実績</div><div class="kc-val">${f25}</div><div class="kc-sub">億円</div></div>
-      <div class="kc"><div class="kc-lbl">前年差</div><div class="kc-val" style="color:${dcol}">${delta >= 0 ? '+' : ''}${delta.toFixed(1)}</div><div class="kc-sub">億円</div></div>`;
-    mets.innerHTML = `<div class="met"><span class="mn">前年比</span><span class="mv" style="color:${dcol}">${pctYY}%</span></div>
-      <div class="met"><span class="mn">トレンド</span><span class="mv" style="color:${dcol}">${delta >= 0 ? '▲ 増収' : '▼ 減収'}</span></div>`;
-    ghdr.innerHTML = `<div><div class="glbl">${name} 前年比成長</div>
-      <div style="font-size:10px;color:#64748b;margin-top:3px;">2024年 <b style="color:#1e293b;">${f24}億円</b></div></div>
-      <div style="text-align:right;"><div class="gnum">${f25}<span style="font-size:11px;font-weight:400;color:#94a3b8;">億</span></div>
-      <div class="gsub">前年比 ${pctYY}%</div></div>`;
-    renderGauge(Math.min(pctYY, 200));
+    setEl('k1lbl', '2024年実績'); setEl('k1val', String(f24)); setEl('k1sub', '億円'); document.getElementById('k1val').style.color = '';
+    setEl('k2lbl', '2025年実績'); setEl('k2val', String(f25)); setEl('k2sub', '億円'); document.getElementById('k2val').style.color = '';
+    setEl('k3lbl', '前年差');     setEl('k3val', (delta >= 0 ? '+' : '') + delta.toFixed(1)); setEl('k3sub', '億円');
+    document.getElementById('k3val').style.color = dcol;
+    setEl('m1n', '前年比');  setEl('m1v', pctYY + '%', dcol);
+    setEl('m2n', 'トレンド'); setEl('m2v', delta >= 0 ? '▲ 増収' : '▼ 減収', dcol);
+    setEl('m3n', ''); setEl('m3v', '');
+    setEl('m4n', ''); setEl('m4v', '');
+    setEl('glabel', name + ' 前年比成長');
+    setElHTML('gsub2', '2024年 <b style="color:#1e293b;">' + f24 + '億円</b>');
+    setElHTML('gnum', f25 + '<span style="font-size:11px;font-weight:400;color:#94a3b8;">億</span>');
+    setEl('gsub', '前年比 ' + pctYY + '%');
+    renderGauge(Math.min(pctYY, 100));
 
   } else if (type === 'region') {
     const reg = DATA.regions.find(x => x.name === name) || {};
     const f23 = reg.fy23 ?? '--', f25 = reg.fy25 ?? '--', delta = reg.delta ?? 0;
     const dcol = delta >= 0 ? '#22c55e' : '#ef4444';
-    kpi3.innerHTML = `<div class="kc"><div class="kc-lbl">2023年シェア</div><div class="kc-val">${f23}</div><div class="kc-sub">%</div></div>
-      <div class="kc"><div class="kc-lbl">2025年シェア</div><div class="kc-val">${f25}</div><div class="kc-sub">%</div></div>
-      <div class="kc"><div class="kc-lbl">シェア変化</div><div class="kc-val" style="color:${dcol}">${delta >= 0 ? '+' : ''}${delta}</div><div class="kc-sub">pt</div></div>`;
-    mets.innerHTML = `<div class="met"><span class="mn">変化方向</span><span class="mv" style="color:${dcol}">${delta >= 0 ? '▲ 拡大' : '▼ 縮小'}</span></div>
-      <div class="met"><span class="mn">2025年シェア</span><span class="mv" style="color:#3b82f6;">${f25}%</span></div>`;
-    ghdr.innerHTML = `<div><div class="glbl">${name} 地域シェア（2025年）</div>
-      <div style="font-size:10px;color:#64748b;margin-top:3px;">2023年 <b style="color:#1e293b;">${f23}%</b></div></div>
-      <div style="text-align:right;"><div class="gnum">${f25}<span style="font-size:11px;font-weight:400;color:#94a3b8;">%</span></div>
-      <div class="gsub">変化 ${delta >= 0 ? '+' : ''}${delta}pt</div></div>`;
+    setEl('k1lbl', '2023年シェア'); setEl('k1val', String(f23)); setEl('k1sub', '%'); document.getElementById('k1val').style.color = '';
+    setEl('k2lbl', '2025年シェア'); setEl('k2val', String(f25)); setEl('k2sub', '%'); document.getElementById('k2val').style.color = '';
+    setEl('k3lbl', 'シェア変化');   setEl('k3val', (delta >= 0 ? '+' : '') + delta); setEl('k3sub', 'pt');
+    document.getElementById('k3val').style.color = dcol;
+    setEl('m1n', '変化方向'); setEl('m1v', delta >= 0 ? '▲ 拡大' : '▼ 縮小', dcol);
+    setEl('m2n', '2025年シェア'); setEl('m2v', f25 + '%', '#3b82f6');
+    setEl('m3n', ''); setEl('m3v', '');
+    setEl('m4n', ''); setEl('m4v', '');
+    setEl('glabel', name + ' 地域シェア（2025年）');
+    setElHTML('gsub2', '2023年 <b style="color:#1e293b;">' + f23 + '%</b>');
+    setElHTML('gnum', f25 + '<span style="font-size:11px;font-weight:400;color:#94a3b8;">%</span>');
+    setEl('gsub', '変化 ' + (delta >= 0 ? '+' : '') + delta + 'pt');
     renderGauge(f25 !== '--' ? f25 : 0);
   }
 }
@@ -825,7 +837,7 @@ function applyDrill(type, name) {
   } catch(e){ console.error('drill⑥rank', e); }
 
   // ⑦ KPIカード＋ゲージ更新
-  try { updateKpiPanel(type, name, d); } catch(e){ console.error('drill⑦kpi', e); }
+  try { updateKpiPanel(type, name); } catch(e){ console.error('drill⑦kpi', e); }
 }
 
 function clearDrill() {
@@ -835,9 +847,17 @@ function clearDrill() {
   renderTrend(); renderBrand(); renderBrandRank();
   renderIP(); renderRegion(); renderSegment();
   try {
-    document.getElementById('kpi3').innerHTML=`<div class="kc"><div class="kc-lbl">2025年実績</div><div class="kc-val">230</div><div class="kc-sub">億円</div></div><div class="kc"><div class="kc-lbl">2027年目標</div><div class="kc-val">317</div><div class="kc-sub">億円</div></div><div class="kc"><div class="kc-lbl">2028年目標</div><div class="kc-val">400</div><div class="kc-sub">億円</div></div>`;
-    document.getElementById('metsBox').innerHTML=`<div class="met"><span class="mn">2027年ギャップ</span><span class="mv" style="color:#f97316;">87億円</span></div><div class="met"><span class="mn">2028年ギャップ</span><span class="mv" style="color:#ef4444;">170億円</span></div><div class="met"><span class="mn">最高粗利率</span><span class="mv" style="color:#22c55e;">40.0%</span></div><div class="met"><span class="mn">注力IP数</span><span class="mv" style="color:#3b82f6;">5 IP</span></div>`;
-    document.getElementById('gaugeHdr').innerHTML=`<div><div class="glbl">2026年 進捗（3月末）</div><div style="font-size:10px;color:#64748b;margin-top:3px;">計画 <b style="color:#1e293b;">250億円</b></div></div><div style="text-align:right;"><div class="gnum">110.9<span style="font-size:11px;font-weight:400;color:#94a3b8;">億</span></div><div class="gsub">計画進捗 44.3%</div></div>`;
+    setEl('k1lbl','2025年実績'); setEl('k1val','230'); setEl('k1sub','億円'); document.getElementById('k1val').style.color='';
+    setEl('k2lbl','2027年目標'); setEl('k2val','317'); setEl('k2sub','億円'); document.getElementById('k2val').style.color='';
+    setEl('k3lbl','2028年目標'); setEl('k3val','400'); setEl('k3sub','億円'); document.getElementById('k3val').style.color='';
+    setEl('m1n','2027年ギャップ'); setEl('m1v','87億円','#f97316');
+    setEl('m2n','2028年ギャップ'); setEl('m2v','170億円','#ef4444');
+    setEl('m3n','最高粗利率');     setEl('m3v','40.0%','#22c55e');
+    setEl('m4n','注力IP数');       setEl('m4v','5 IP','#3b82f6');
+    setEl('glabel','2026年 進捗（3月末）');
+    setElHTML('gsub2','計画 <b style="color:#1e293b;">250億円</b>');
+    setElHTML('gnum','110.9<span style="font-size:11px;font-weight:400;color:#94a3b8;">億</span>');
+    setEl('gsub','計画進捗 44.3%');
     renderGauge();
   } catch(_){}
 }
