@@ -221,7 +221,7 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
       </div>
 
       <div class="card" style="flex:1;">
-        <div class="ctitle"><span class="chl">2027年 目標達成率ランキング</span></div>
+        <div class="ctitle"><span class="chl" id="rankTitle">2027年 目標達成率ランキング</span></div>
         <div class="rkhdr">
           <span></span>
           <span class="rkhcol">ブランド</span>
@@ -424,14 +424,30 @@ function renderBrand() {
   },true);
 }
 
-function renderBrandRank() {
+function renderBrandRank(overrideBrands, highlightName) {
   const el=document.getElementById('brandRank'); el.innerHTML='';
-  const sorted=[...filtBrands()].map(b=>({...b,r27:Math.round(b.fy25/b.fy27*100),r28:Math.round(b.fy25/b.fy28*100)})).sort((a,b)=>b.r27-a.r27);
+  let src;
+  if (overrideBrands && overrideBrands.length > 0) {
+    src = overrideBrands.map(ob => {
+      const full = DATA.brands.find(b => b.name === ob.name);
+      return full ? {...full, fy25: ob.fy25 ?? full.fy25} : null;
+    }).filter(Boolean);
+  } else {
+    src = [...filtBrands()];
+  }
+  const sorted = src.map(b=>({...b,
+    r27: Math.round(b.fy25 / (b.fy27||b.fy25) * 100),
+    r28: Math.round(b.fy25 / (b.fy28||b.fy25) * 100)
+  })).sort((a,b)=>b.r27-a.r27);
   sorted.forEach((b,i)=>{
+    const isHL = !!highlightName && b.name === highlightName;
+    const faded = !!highlightName && !isHL;
     const col=b.r27>=80?'#22c55e':b.r27>=50?'#f97316':'#ef4444';
     const w27=Math.min(b.r27,100),w28=Math.min(b.r28,100);
     const row=document.createElement('div'); row.className='rkrow';
     row.style.cursor='pointer';
+    if (faded) row.style.opacity='0.25';
+    if (isHL) row.style.background='#eff6ff';
     row.addEventListener('click',()=>applyDrill('brand',b.name));
     row.innerHTML=`<span class="rnn ${i<3?'hi':''}">${i+1}</span><span class="rnm" title="${b.name}">${b.name}</span>
       <div class="rbar">
@@ -442,6 +458,14 @@ function renderBrandRank() {
       <span class="rpct" style="color:${col};">${b.mult}</span>`;
     el.appendChild(row);
   });
+  const ttl = document.getElementById('rankTitle');
+  if (ttl) {
+    if (overrideBrands && overrideBrands.length > 0) {
+      ttl.textContent = (highlightName ? highlightName + ' ' : '') + '関連ブランド';
+    } else {
+      ttl.textContent = '2027年 目標達成率ランキング';
+    }
+  }
 }
 
 function renderIP(overrideData) {
@@ -729,6 +753,16 @@ function applyDrill(type, name) {
       }, true);
     }
   } catch(e){ console.error('drill⑤segment', e); }
+
+  // ⑥ ランキング更新
+  try {
+    if (type === 'brand') {
+      renderBrandRank(null, name);
+    } else {
+      const blist = d.brands || [];
+      renderBrandRank(blist.length > 0 ? blist : null, name);
+    }
+  } catch(e){ console.error('drill⑥rank', e); }
 }
 
 function clearDrill() {
