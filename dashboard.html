@@ -601,159 +601,184 @@ function selectIP(name) {
 
 
 
-// ═══════════════════════════════════════════════════════
-// ドリルダウン：クリックで全チャート完全連動
-// ═══════════════════════════════════════════════════════
 
-const CONTEXT_LABEL = {brand:'ブランド', ip:'IP', region:'地域'};
-const TREND_COLORS  = {brand:'#f59e0b', ip:'#a855f7', region:'#22c55e'};
+// ═══════════════════════════════════════════════════════
+// ドリルダウン：クリックで全グラフ完全連動
+// ═══════════════════════════════════════════════════════
+const TREND_COLORS = {brand:'#f59e0b', ip:'#a855f7', region:'#22c55e'};
 
 function applyDrill(type, name) {
-  // 同じ要素を再クリックで解除
   if (SEL.type === type && SEL.name === name) { clearDrill(); return; }
   SEL.type = type; SEL.name = name;
-
   const d = DRILL[type + 's']?.[name];
   if (!d) { clearDrill(); return; }
 
-  showContextBar(type, name, d.kpi);
+  // コンテキストバー表示
+  const col = TREND_COLORS[type];
+  const label = {brand:'ブランド', ip:'IP', region:'地域'}[type] || '';
+  const kpi = d.kpi || {};
+  const kpiStr = kpi.fy25 != null
+    ? `　2024: ${kpi.fy24}億　▶　2025: ${kpi.fy25}億　（${kpi.delta >= 0 ? '+' : ''}${kpi.delta}億）`
+    : '';
+  const badge = document.getElementById('drillBadge');
+  badge.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0;"></span>&nbsp;<b>${label}: ${name}</b>${kpiStr}&nbsp;&nbsp;✕ 解除`;
+  badge.style.display = 'flex';
 
-  // ① トレンドチャート：全社 + 選択項目を重ねて表示
-  const tr = d.trend || [];
-  C.trend.setOption({
-    series:[
-      {},{},{},  // 既存3系列を維持
-      {name: name, type:'line',
-       data:[null, tr[1]||null, tr[2]||null, tr[3]||null, null, null],
-       lineStyle:{color: TREND_COLORS[type], width:2.5, type:'dashed'},
-       itemStyle:{color: TREND_COLORS[type]}, symbol:'circle', symbolSize:6,
-       label:{show:true, position:'top', fontSize:9, fontWeight:700, color: TREND_COLORS[type],
-              formatter: p => p.value != null ? p.value + '億' : ''}}
-    ]
-  });
-
-  // ② IP ランキング
-  const ips = d.ips || [];
-  if (ips.length > 0) {
-    C.ip.setOption({
-      grid:{top:4, right:38, bottom:6, left:118},
-      xAxis:{type:'value', axisLabel:{fontSize:9, color:'#94a3b8', formatter:v=>v+'億'}, splitLine:{lineStyle:{color:'#f1f5f9'}}},
-      yAxis:{type:'category', data:ips.map(x=>x.name), axisLabel:{fontSize:9, color:'#374151'}},
-      tooltip:{trigger:'axis', axisPointer:{type:'shadow'}, ...TOOLTIP,
-        formatter:params=>{const v=ips.find(x=>x.name===params[0]?.axisValue)||{};return `<b>${v.name}</b><br/>2024: ${v.fy24}億<br/>2025: ${v.fy25}億<br/>差: <b style="color:${v.delta>=0?'#22c55e':'#ef4444'}">${v.delta>=0?'+':''}${v.delta}億</b>`;}},
-      series:[
-        {name:'2024', type:'bar', barMaxWidth:9, data:ips.map(x=>x.fy24), itemStyle:{color:'#e2e8f0', borderRadius:2}},
-        {name:'2025', type:'bar', barMaxWidth:9,
-         data:ips.map(x=>({value:x.fy25, itemStyle:{color:x.delta>=0?'#22c55e':'#ef4444', borderRadius:2}})),
-         label:{show:true, position:'right', fontSize:8,
-                formatter:p=>{const v=ips[p.dataIndex];return `${v.delta>=0?'▲':'▼'}${Math.abs(v.delta).toFixed(1)}`;},
-                color:p=>ips[p.dataIndex].delta>=0?'#22c55e':'#ef4444'}}
+  // ① トレンド：全社線を維持しつつ選択項目を重ねる
+  try {
+    const tr = d.trend || [];
+    C.trend.setOption({
+      legend: {data: ['実績','計画','FY27/28目標', name]},
+      series: [{}, {}, {},
+        {name, type:'line',
+         data: [null, tr[1]??null, tr[2]??null, tr[3]??null, null, null],
+         lineStyle:{color:col, width:2.5, type:'dashed'},
+         itemStyle:{color:col}, symbol:'circle', symbolSize:6,
+         label:{show:true, position:'top', fontSize:9, fontWeight:700, color:col,
+                formatter: p => p.value != null ? p.value + '億' : ''}}
       ]
-    }, true);
-    document.querySelector('#chartIP').closest('.card').querySelector('.chl').textContent =
-      (type==='brand'?name+' のIP別実績': type==='region'?name+' の上位IP': type==='ip'?name+' の関連ブランド': 'IP別ランキング');
-  }
+    });
+  } catch(e){ console.error('drill①trend', e); }
+
+  // ② IP ランキング（ブランド→そのブランドのIP、地域→その地域のIP、IP→関連ブランド）
+  try {
+    const items = (type === 'ip') ? (d.brands || []) : (d.ips || []);
+    if (items.length > 0) {
+      C.ip.setOption({
+        grid:    {top:4, right:38, bottom:6, left:118},
+        xAxis:   {type:'value', axisLabel:{fontSize:9, color:'#94a3b8', formatter:v=>v+'億'}, splitLine:{lineStyle:{color:'#f1f5f9'}}},
+        yAxis:   {type:'category', data:items.map(x=>x.name), axisLabel:{fontSize:9, color:'#374151'}},
+        tooltip: {trigger:'axis', axisPointer:{type:'shadow'}, ...TOOLTIP,
+                  formatter: ps => {
+                    const v = items.find(x=>x.name===ps[0]?.axisValue)||{};
+                    return `<b>${v.name||''}</b><br/>2024: ${v.fy24}億<br/>2025: ${v.fy25}億<br/>差: <b style="color:${(v.delta||0)>=0?'#22c55e':'#ef4444'}">${(v.delta||0)>=0?'+':''}${v.delta}億</b>`;
+                  }},
+        series: [
+          {name:'2024', type:'bar', barMaxWidth:9, data:items.map(x=>x.fy24),
+           itemStyle:{color:'#e2e8f0', borderRadius:2}},
+          {name:'2025', type:'bar', barMaxWidth:9,
+           data: items.map(x=>({value:x.fy25, itemStyle:{color:(x.delta||0)>=0?'#22c55e':'#ef4444', borderRadius:2}})),
+           label:{show:true, position:'right', fontSize:8,
+                  formatter: p => { const v=items[p.dataIndex]; return `${(v.delta||0)>=0?'▲':'▼'}${Math.abs(v.delta||0).toFixed(1)}`; },
+                  color:     p => (items[p.dataIndex].delta||0)>=0?'#22c55e':'#ef4444'}}
+        ]
+      }, true);
+    }
+  } catch(e){ console.error('drill②ip', e); }
 
   // ③ ブランドチャート
-  const brands = d.brands || [];
-  if (type === 'ip' && brands.length > 0) {
-    // IP選択時：そのIPが売れているブランドを表示
-    const sorted = [...brands].sort((a,b)=>b.fy25-a.fy25);
-    C.brand.setOption({
-      yAxis:{type:'category', data:sorted.map(b=>b.name)},
-      series:[
-        {name:'FY24実績', type:'bar', data:sorted.map(b=>b.fy24), barMaxWidth:11, itemStyle:{color:'#93c5fd', borderRadius:2}},
-        {name:'FY25実績', type:'bar', data:sorted.map(b=>({value:b.fy25, itemStyle:{color:b.delta>=0?'#3b82f6':'#94a3b8', borderRadius:2}})), barMaxWidth:11,
-         label:{show:true, position:'right', fontSize:8, formatter:p=>{const v=sorted[p.dataIndex];return `${v.delta>=0?'+':''}${v.delta.toFixed(1)}`;}, color:'#1e293b'}},
-      ]
-    }, true);
-  } else if (type === 'region' && brands.length > 0) {
-    // 地域選択時：その地域のブランド別
-    const sorted = [...brands].sort((a,b)=>b.fy25-a.fy25);
-    C.brand.setOption({
-      yAxis:{type:'category', data:sorted.map(b=>b.name)},
-      series:[
-        {name:'2024', type:'bar', data:sorted.map(b=>b.fy24), barMaxWidth:11, itemStyle:{color:'#93c5fd', borderRadius:2}},
-        {name:'2025', type:'bar', data:sorted.map(b=>({value:b.fy25, itemStyle:{color:b.delta>=0?'#3b82f6':'#94a3b8', borderRadius:2}})), barMaxWidth:11,
-         label:{show:true, position:'right', fontSize:8, formatter:p=>{const v=sorted[p.dataIndex];return `${v.delta>=0?'+':''}${v.delta.toFixed(1)}`;}, color:'#1e293b'}},
-      ]
-    }, true);
-  } else if (type === 'brand') {
-    // ブランド選択時：そのブランドをハイライト、他フェード
-    const allBrands = [...filtBrands()].sort((a,b)=>b.fy25-a.fy25);
-    C.brand.setOption({
-      series:[
-        {name:'FY25実績', type:'bar', data:allBrands.map(b=>({value:b.fy25, itemStyle:{color:b.name===name?'#3b82f6':'rgba(147,197,253,0.3)', borderRadius:2}}))},
-        {name:'FY27目標', type:'bar', data:allBrands.map(b=>({value:b.fy27, itemStyle:{color:b.name===name?'#93c5fd':'rgba(219,234,254,0.3)', borderRadius:2}}))},
-        {name:'FY28目標', type:'bar', data:allBrands.map(b=>({value:b.fy28, itemStyle:{color:b.name===name?'#dbeafe':'rgba(219,234,254,0.2)', borderRadius:2}}))},
-      ]
-    });
-  }
+  try {
+    if (type === 'brand') {
+      // 選択ブランドをハイライト、他をフェード
+      const all = [...filtBrands()].sort((a,b)=>b.fy25-a.fy25);
+      C.brand.setOption({
+        grid:    {top:24, right:10, bottom:6, left:96},
+        legend:  {top:0, right:0, textStyle:{fontSize:9}, itemWidth:10, itemHeight:7, data:['FY25実績','FY27目標','FY28目標']},
+        xAxis:   {type:'value', axisLabel:{fontSize:9, color:'#94a3b8', formatter:v=>v+'億'}, splitLine:{lineStyle:{color:'#f1f5f9'}}},
+        yAxis:   {type:'category', data:all.map(b=>b.name), axisLabel:{fontSize:10, color:'#374151'}},
+        tooltip: {trigger:'axis', axisPointer:{type:'shadow'}, ...TOOLTIP},
+        series: [
+          {name:'FY25実績', type:'bar', barMaxWidth:11,
+           data: all.map(b=>({value:b.fy25, itemStyle:{color:b.name===name?'#3b82f6':'rgba(147,197,253,0.25)', borderRadius:2}}))},
+          {name:'FY27目標', type:'bar', barMaxWidth:11,
+           data: all.map(b=>({value:b.fy27, itemStyle:{color:b.name===name?'#93c5fd':'rgba(219,234,254,0.2)', borderRadius:2}}))},
+          {name:'FY28目標', type:'bar', barMaxWidth:11,
+           data: all.map(b=>({value:b.fy28, itemStyle:{color:b.name===name?'#dbeafe':'rgba(219,234,254,0.15)', borderRadius:2}}))}
+        ]
+      }, true);
+    } else {
+      // IP・地域選択時：関連ブランドを実績で表示
+      const blist = [...(d.brands||[])].sort((a,b)=>b.fy25-a.fy25);
+      if (blist.length > 0) {
+        C.brand.setOption({
+          grid:    {top:24, right:10, bottom:6, left:96},
+          legend:  {top:0, right:0, textStyle:{fontSize:9}, itemWidth:10, itemHeight:7, data:['2024実績','2025実績']},
+          xAxis:   {type:'value', axisLabel:{fontSize:9, color:'#94a3b8', formatter:v=>v+'億'}, splitLine:{lineStyle:{color:'#f1f5f9'}}},
+          yAxis:   {type:'category', data:blist.map(b=>b.name), axisLabel:{fontSize:10, color:'#374151'}},
+          tooltip: {trigger:'axis', axisPointer:{type:'shadow'}, ...TOOLTIP},
+          series: [
+            {name:'2024実績', type:'bar', barMaxWidth:11, data:blist.map(b=>b.fy24), itemStyle:{color:'#93c5fd', borderRadius:2}},
+            {name:'2025実績', type:'bar', barMaxWidth:11,
+             data: blist.map(b=>({value:b.fy25, itemStyle:{color:(b.delta||0)>=0?'#3b82f6':'#94a3b8', borderRadius:2}})),
+             label:{show:true, position:'right', fontSize:8,
+                    formatter:p=>{const v=blist[p.dataIndex];return `${(v.delta||0)>=0?'+':''}${(v.delta||0).toFixed(1)}`;}, color:'#1e293b'}}
+          ]
+        }, true);
+      }
+    }
+  } catch(e){ console.error('drill③brand', e); }
 
   // ④ 地域チャート
-  const regions = d.regions || [];
-  if (regions.length > 0 && type !== 'region') {
-    const filtered = regions.filter(r=>r.fy25>0||r.fy23>0);
-    C.region.setOption({
-      yAxis:{type:'category', data:filtered.map(r=>r.name)},
-      series:[
-        {name:'2023', type:'bar', barMaxWidth:9, data:filtered.map(r=>r.fy23), itemStyle:{color:'#e2e8f0', borderRadius:2}},
-        {name:'2025', type:'bar', barMaxWidth:9,
-         data:filtered.map(r=>({value:r.fy25, itemStyle:{color:r.delta>0?'#3b82f6':'#94a3b8', borderRadius:2}})),
-         label:{show:true, position:'right', fontSize:8,
-                formatter:p=>{const v=filtered[p.dataIndex];return `${v.delta>0?'+':''}${v.delta}pt`;},
-                color:p=>filtered[p.dataIndex].delta>0?'#3b82f6':'#ef4444'}}
-      ]
-    }, true);
-    document.getElementById('tagReg').textContent = name + ' 地域シェア';
-    document.getElementById('tagReg').className = 'ctag on';
-  } else if (type === 'region') {
-    // 地域選択時：その地域をハイライト
-    const allRegs = [...filtRegions()].sort((a,b)=>b.fy25-a.fy25);
-    C.region.setOption({
-      series:[
-        {name:'FY23', type:'bar', data:allRegs.map(r=>({value:r.fy23, itemStyle:{color:r.name===name?'#cbd5e1':'rgba(226,232,240,0.3)', borderRadius:2}}))},
-        {name:'FY25', type:'bar', data:allRegs.map(r=>({value:r.fy25, itemStyle:{color:r.name===name?'#3b82f6':'rgba(147,197,253,0.3)', borderRadius:2}}))},
-      ]
-    });
-  }
-
-  // ⑤ セグメントチャート：ブランド選択時は関連セグメントをハイライト
-  if (type === 'brand') {
-    const relSegs = new Set();
-    for (const [seg, blist] of Object.entries(SEG_BRAND)) { if (blist.includes(name)) relSegs.add(seg); }
-    if (relSegs.size > 0) {
-      const segs = [...filtSegments()].sort((a,b)=>b.gross-a.gross);
-      C.segment.setOption({
-        series:[{type:'bar', barMaxWidth:40,
-          data:segs.map(d=>({value:d.gross, itemStyle:{
-            color:relSegs.has(d.name)?(d.gross>=30?'#22c55e':d.gross>=20?'#3b82f6':'#94a3b8'):'rgba(226,232,240,0.4)',
-            borderRadius:[4,4,0,0]}})),
-          label:{show:true,position:'top',fontSize:10,fontWeight:700,formatter:p=>p.value+'%'}}]
+  try {
+    if (type !== 'region') {
+      const regs = (d.regions||[]).filter(r=>(r.fy25||0)>0||(r.fy23||0)>0);
+      if (regs.length > 0) {
+        C.region.setOption({
+          grid:    {top:4, right:50, bottom:6, left:72},
+          xAxis:   {type:'value', axisLabel:{fontSize:9, color:'#94a3b8', formatter:v=>v+'%'}, splitLine:{lineStyle:{color:'#f1f5f9'}}},
+          yAxis:   {type:'category', data:regs.map(r=>r.name), axisLabel:{fontSize:9, color:'#374151'}},
+          tooltip: {trigger:'axis', axisPointer:{type:'shadow'}, ...TOOLTIP,
+                    formatter: ps => {
+                      const r=regs.find(x=>x.name===ps[0]?.axisValue)||{};
+                      return `<b>${r.name||''}</b><br/>2023: ${r.fy23}%<br/>2025: ${r.fy25}%<br/>変化: <b style="color:${(r.delta||0)>0?'#3b82f6':'#ef4444'}">${(r.delta||0)>0?'+':''}${r.delta}pt</b>`;
+                    }},
+          series: [
+            {name:'2023', type:'bar', barMaxWidth:9, data:regs.map(r=>r.fy23||0), itemStyle:{color:'#e2e8f0', borderRadius:2}},
+            {name:'2025', type:'bar', barMaxWidth:9,
+             data: regs.map(r=>({value:r.fy25||0, itemStyle:{color:(r.delta||0)>0?'#3b82f6':'#94a3b8', borderRadius:2}})),
+             label:{show:true, position:'right', fontSize:8,
+                    formatter: p=>{const v=regs[p.dataIndex];return `${(v.delta||0)>0?'+':''}${v.delta}pt`;},
+                    color:     p=>(regs[p.dataIndex].delta||0)>0?'#3b82f6':'#ef4444'}}
+          ]
+        }, true);
+        try { const t=document.getElementById('tagReg'); if(t){t.textContent=name+' 地域'; t.className='ctag on';} } catch(_){}
+      }
+    } else {
+      // 地域選択 → その地域をハイライト
+      const all = [...filtRegions()].sort((a,b)=>b.fy25-a.fy25);
+      C.region.setOption({
+        series: [
+          {name:'FY23', type:'bar', data:all.map(r=>({value:r.fy23, itemStyle:{color:r.name===name?'#cbd5e1':'rgba(226,232,240,0.3)', borderRadius:2}}))},
+          {name:'FY25', type:'bar', data:all.map(r=>({value:r.fy25, itemStyle:{color:r.name===name?'#3b82f6':'rgba(147,197,253,0.3)', borderRadius:2}}))}
+        ]
       });
     }
-  }
+  } catch(e){ console.error('drill④region', e); }
+
+  // ⑤ セグメント：ブランド選択時のみ関連セグメントを強調
+  try {
+    if (type === 'brand') {
+      const relSegs = new Set();
+      for (const [s, bl] of Object.entries(SEG_BRAND)) { if (bl.includes(name)) relSegs.add(s); }
+      const segs = [...filtSegments()].sort((a,b)=>b.gross-a.gross);
+      C.segment.setOption({
+        grid:  {top:4, right:10, bottom:32, left:10},
+        xAxis: {type:'category', data:segs.map(d=>d.name),
+                axisLabel:{fontSize:9, color:'#374151', interval:0, rotate:segs.length>3?10:0},
+                axisLine:{lineStyle:{color:'#e2e8f0'}}},
+        yAxis: {type:'value', name:'粗利率%', nameTextStyle:{fontSize:9, color:'#94a3b8'}, max:50,
+                axisLabel:{fontSize:9, color:'#94a3b8', formatter:v=>v+'%'},
+                splitLine:{lineStyle:{color:'#f1f5f9'}}},
+        tooltip: {trigger:'item', ...TOOLTIP,
+                  formatter:p=>`<b>${p.name}</b><br/>粗利率: <b>${p.value}%</b>`},
+        series: [{type:'bar', barMaxWidth:40,
+          data: segs.map(sg=>({value:sg.gross, itemStyle:{
+            color: relSegs.has(sg.name)
+              ? (sg.gross>=30?'#22c55e':sg.gross>=20?'#3b82f6':'#94a3b8')
+              : 'rgba(226,232,240,0.4)',
+            borderRadius:[4,4,0,0]}})),
+          label:{show:true, position:'top', fontSize:10, fontWeight:700, formatter:p=>p.value+'%'}}]
+      }, true);
+    }
+  } catch(e){ console.error('drill⑤segment', e); }
 }
 
 function clearDrill() {
   SEL.type = ''; SEL.name = '';
-  document.getElementById('drillBadge').style.display = 'none';
-  // チャートタイトルをリセット
-  document.querySelector('#chartIP').closest('.card').querySelector('.chl').textContent = 'IP別ランキング【2024→2025】';
-  document.getElementById('tagReg').textContent = '全地域';
-  document.getElementById('tagReg').className = 'ctag';
-  // 全チャートをデフォルトに戻す
+  try { document.getElementById('drillBadge').style.display = 'none'; } catch(_){}
+  try { const t=document.getElementById('tagReg'); if(t){t.textContent='全地域';t.className='ctag';} } catch(_){}
   renderTrend(); renderBrand(); renderBrandRank();
   renderIP(); renderRegion(); renderSegment();
-}
-
-function showContextBar(type, name, kpi) {
-  const badge = document.getElementById('drillBadge');
-  const label = CONTEXT_LABEL[type] || '';
-  const color = TREND_COLORS[type] || '#fff';
-  const deltaStr = kpi ? `　2024: ${kpi.fy24}億　→　2025: ${kpi.fy25}億　（${kpi.delta>=0?'+':''}${kpi.delta}億）` : '';
-  badge.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block;"></span>&nbsp;<b>${label}: ${name}</b>${deltaStr}&nbsp;&nbsp;✕ 解除`;
-  badge.style.display = 'flex';
 }
 
 function bindClicks() {
