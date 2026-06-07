@@ -156,6 +156,7 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
     <option>日本</option><option>中国</option><option>アメリカ</option><option>韓国</option><option>台湾</option><option>ヨーロッパ</option>
   </select>
   <div class="fdiv"></div>
+  <div id="drillBadge" style="display:none;align-items:center;gap:6px;padding:3px 10px;background:#1e293b;color:#f1f5f9;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;" onclick="resetDrill()"></div>
   <span class="fl">基準年</span>
   <select class="fs"><option>FY25</option><option>FY24</option><option>FY23</option></select>
   <span class="fl">表示</span>
@@ -361,6 +362,9 @@ const DATA = {
   ],
 };
 
+
+const DRILL = {"brands": {"ねんどろいど": {"ips": [{"name": "初音ミク", "fy24": 4.38, "fy25": 6.69, "delta": 2.31}, {"name": "ホロライブ", "fy24": 6.39, "fy25": 3.07, "delta": -3.32}, {"name": "ぼっち・ざ・ろっく！", "fy24": 6.1, "fy25": 2.56, "delta": -3.54}, {"name": "ブルーアーカイブ", "fy24": 4.44, "fy25": 3.8, "delta": -0.64}, {"name": "フリーレン", "fy24": 3.25, "fy25": 3.79, "delta": 0.54}, {"name": "ウマ娘", "fy24": 3.05, "fy25": 2.73, "delta": -0.32}, {"name": "ハイキュー!!", "fy24": 3.83, "fy25": 1.08, "delta": -2.75}], "regions": [{"name": "日本", "fy23": 48.7, "fy25": 44.7, "delta": -4.0}, {"name": "中国", "fy23": 10.0, "fy25": 17.7, "delta": 7.7}, {"name": "台湾", "fy23": 6.9, "fy25": 5.2, "delta": -1.7}, {"name": "韓国", "fy23": 3.2, "fy25": 7.3, "delta": 4.0}, {"name": "アメリカ", "fy23": 17.4, "fy25": 13.3, "delta": -4.1}, {"name": "ヨーロッパ", "fy23": 3.6, "fy25": 3.2, "delta": -0.4}, {"name": "その他", "fy23": 10.2, "fy25": 8.6, "delta": -1.6}], "trend": [3.2, 79.0, 97.7, 77.4, 54.4]}, "スケール": {"ips": [{"name": "ブルーアーカイブ", "fy24": 2.6, "fy25": 11.79, "delta": 9.2}, {"name": "初音ミク", "fy24": 4.37, "fy25": 8.88, "delta": 4.51}, {"name": "Fate/GO", "fy24": 2.02, "fy25": 2.99, "delta": 0.97}, {"name": "リコリス・リコイル", "fy24": 4.06, "fy25": 0.0, "delta": -4.06}, {"name": "STEINS;GATE", "fy24": 0.0, "fy25": 2.84, "delta": 2.84}, {"name": "ぼっち・ざ・ろっく！", "fy24": 1.18, "fy25": 1.5, "delta": 0.32}, {"name": "ウマ娘", "fy24": 1.59, "fy25": 0.85, "delta": -0.75}], "regions": [{"name": "日本", "fy23": 76.8, "fy25": 48.9, "delta": -27.9}, {"name": "中国", "fy23": 8.5, "fy25": 28.2, "delta": 19.7}, {"name": "台湾", "fy23": 4.5, "fy25": 5.0, "delta": 0.6}, {"name": "韓国", "fy23": 1.3, "fy25": 4.8, "delta": 3.5}, {"name": "アメリカ", "fy23": 4.0, "fy25": 5.2, "delta": 1.2}, {"name": "ヨーロッパ", "fy23": 1.5, "fy25": 2.3, "delta": 0.8}, {"name": "その他", "fy23": 3.4, "fy25": 5.5, "delta": 2.1}], "trend": [0.5, 25.5, 39.4, 46.4, 38.4]}, "メカスマ": {"ips": [{"name": "グリッドマンU", "fy24": 7.88, "fy25": 0.64, "delta": -7.24}, {"name": "マイトガイン", "fy24": 4.61, "fy25": 1.92, "delta": -2.7}, {"name": "ダ・ガーン", "fy24": 4.18, "fy25": 1.06, "delta": -3.11}, {"name": "ファイバード", "fy24": 0.0, "fy25": 4.88, "delta": 4.88}, {"name": "ブレイバーン", "fy24": 0.15, "fy25": 3.9, "delta": 3.75}, {"name": "グランゾート", "fy24": 1.73, "fy25": 0.45, "delta": -1.28}, {"name": "楽園追放 -Expelled from Paradise-", "fy24": 1.49, "fy25": 0.29, "delta": -1.2}], "regions": [{"name": "日本", "fy23": 64.9, "fy25": 64.8, "delta": -0.1}, {"name": "中国", "fy23": 10.2, "fy25": 11.0, "delta": 0.8}, {"name": "台湾", "fy23": 8.2, "fy25": 6.8, "delta": -1.4}, {"name": "韓国", "fy23": 9.7, "fy25": 11.1, "delta": 1.4}, {"name": "アメリカ", "fy23": 2.7, "fy25": 2.1, "delta": -0.6}, {"name": "ヨーロッパ", "fy23": 1.1, "fy25": 1.3, "delta": 0.2}, {"name": "その他", "fy23": 3.2, "fy25": 2.8, "delta": -0.4}], "trend": [0.2, 25.2, 36.5, 35.1, 29.6]}, "POP UP PARADE": {"ips": [{"name": "ホロライブ", "fy24": 1.47, "fy25": 3.03, "delta": 1.56}, {"name": "初音ミク", "fy24": 0.62, "fy25": 2.37, "delta": 1.74}, {"name": "NEEDY GIRL OVERDOSE", "fy24": 1.52, "fy25": 0.8, "delta": -0.72}, {"name": "ブルーアーカイブ", "fy24": 1.84, "fy25": 0.3, "delta": -1.53}, {"name": "ダンジョン飯", "fy24": 0.72, "fy25": 1.27, "delta": 0.55}, {"name": "サイバーパンク エッジランナーズ", "fy24": 1.77, "fy25": 0.0, "delta": -1.77}, {"name": "HUNTER×HUNTER", "fy24": 1.62, "fy25": 0.0, "delta": -1.62}], "regions": [{"name": "日本", "fy23": 36.7, "fy25": 40.5, "delta": 3.8}, {"name": "中国", "fy23": 11.2, "fy25": 17.7, "delta": 6.6}, {"name": "台湾", "fy23": 7.6, "fy25": 7.0, "delta": -0.6}, {"name": "韓国", "fy23": 1.8, "fy25": 2.9, "delta": 1.2}, {"name": "アメリカ", "fy23": 19.7, "fy25": 13.7, "delta": -6.0}, {"name": "ヨーロッパ", "fy23": 13.3, "fy25": 9.7, "delta": -3.6}, {"name": "その他", "fy23": 9.8, "fy25": 8.4, "delta": -1.3}], "trend": [0.9, 26.1, 32.0, 30.4, 18.5]}, "ぬいぐるみ": {"ips": [{"name": "BanG Dream!", "fy24": 1.83, "fy25": 8.75, "delta": 6.91}, {"name": "ブルーアーカイブ", "fy24": 1.73, "fy25": 2.82, "delta": 1.09}, {"name": "フリーレン", "fy24": 0.42, "fy25": 0.35, "delta": -0.08}, {"name": "Fate/GO", "fy24": 0.0, "fy25": 0.69, "delta": 0.69}, {"name": "GUILTY GEAR-STRIVE-", "fy24": 0.11, "fy25": 0.34, "delta": 0.23}, {"name": "ダンジョン飯", "fy24": 0.19, "fy25": 0.22, "delta": 0.03}, {"name": "初音ミク", "fy24": 0.03, "fy25": 0.37, "delta": 0.34}], "regions": [{"name": "日本", "fy23": 61.7, "fy25": 42.4, "delta": -19.3}, {"name": "中国", "fy23": 8.7, "fy25": 37.6, "delta": 29.0}, {"name": "台湾", "fy23": 1.8, "fy25": 6.0, "delta": 4.3}, {"name": "韓国", "fy23": 0.6, "fy25": 2.9, "delta": 2.4}, {"name": "アメリカ", "fy23": 17.7, "fy25": 6.9, "delta": -10.8}, {"name": "ヨーロッパ", "fy23": 0.2, "fy25": 0.1, "delta": -0.2}, {"name": "その他", "fy23": 9.4, "fy25": 4.0, "delta": -5.3}], "trend": [0.0, 2.3, 7.3, 17.7, 14.2]}, "Hello!": {"ips": [{"name": "Blythe", "fy24": 3.26, "fy25": 2.22, "delta": -1.04}, {"name": "初音ミク", "fy24": 0.54, "fy25": 0.5, "delta": -0.04}, {"name": "エヴァ", "fy24": 0.09, "fy25": 0.54, "delta": 0.45}, {"name": "ホロライブ", "fy24": 0.2, "fy25": 0.24, "delta": 0.04}, {"name": "HUNTER×HUNTER", "fy24": 0.33, "fy25": 0.0, "delta": -0.33}, {"name": "魔法少女まどか☆マギカ", "fy24": 0.0, "fy25": 0.3, "delta": 0.3}, {"name": "進撃の巨人", "fy24": 0.0, "fy25": 0.27, "delta": 0.27}], "regions": [{"name": "日本", "fy23": 53.9, "fy25": 40.3, "delta": -13.6}, {"name": "中国", "fy23": 30.3, "fy25": 37.9, "delta": 7.6}, {"name": "台湾", "fy23": 3.4, "fy25": 5.7, "delta": 2.3}, {"name": "韓国", "fy23": 4.0, "fy25": 7.1, "delta": 3.1}, {"name": "アメリカ", "fy23": 3.9, "fy25": 4.6, "delta": 0.7}, {"name": "ヨーロッパ", "fy23": 1.0, "fy25": 0.9, "delta": -0.1}, {"name": "その他", "fy23": 3.6, "fy25": 3.6, "delta": 0.1}], "trend": [0.7, 3.9, 5.0, 5.7, 2.5]}, "figma": {"ips": [{"name": "初音ミク GTプロジェクト2023", "fy24": 0.67, "fy25": 0.0, "delta": -0.67}, {"name": "初音ミク GTプロジェクト", "fy24": 0.0, "fy25": 0.6, "delta": 0.6}, {"name": "Dead Space", "fy24": 0.6, "fy25": 0.0, "delta": -0.6}, {"name": "Doom Eternal", "fy24": 0.0, "fy25": 0.42, "delta": 0.42}, {"name": "グリッドマンU", "fy24": 0.41, "fy25": 0.0, "delta": -0.41}, {"name": "DiabloR IV", "fy24": 0.0, "fy25": 0.2, "delta": 0.2}, {"name": "アサシンクリード: ヴァルハラ", "fy24": 0.08, "fy25": 0.0, "delta": -0.08}], "regions": [{"name": "日本", "fy23": 53.4, "fy25": 36.0, "delta": -17.4}, {"name": "中国", "fy23": 25.7, "fy25": 23.5, "delta": -2.3}, {"name": "台湾", "fy23": 2.5, "fy25": 3.4, "delta": 0.8}, {"name": "韓国", "fy23": 2.5, "fy25": 2.4, "delta": -0.1}, {"name": "アメリカ", "fy23": 0.0, "fy25": 23.3, "delta": 23.3}, {"name": "ヨーロッパ", "fy23": 2.6, "fy25": 5.3, "delta": 2.6}, {"name": "その他", "fy23": 13.2, "fy25": 6.2, "delta": -7.0}], "trend": [0.2, 0.1, 1.8, 1.2, 1.8]}, "ブラインドBOX": {"ips": [{"name": "ハイキュー!!", "fy24": 0.04, "fy25": 1.24, "delta": 1.2}, {"name": "ぼっち・ざ・ろっく！", "fy24": 0.0, "fy25": 0.75, "delta": 0.75}, {"name": "ピアプロキャラクターズ", "fy24": 0.0, "fy25": 0.72, "delta": 0.72}, {"name": "呪術廻戦", "fy24": 0.52, "fy25": 0.0, "delta": -0.52}, {"name": "ブルーロック", "fy24": 0.0, "fy25": 0.37, "delta": 0.37}, {"name": "SPY×FAMILY", "fy24": 0.0, "fy25": 0.23, "delta": 0.23}, {"name": "Dr. MORICKY", "fy24": 0.14, "fy25": 0.06, "delta": -0.08}], "regions": [{"name": "日本", "fy23": 72.1, "fy25": 53.2, "delta": -18.9}, {"name": "中国", "fy23": 11.8, "fy25": 15.0, "delta": 3.2}, {"name": "台湾", "fy23": 3.9, "fy25": 9.3, "delta": 5.5}, {"name": "韓国", "fy23": 1.5, "fy25": 7.7, "delta": 6.2}, {"name": "アメリカ", "fy23": 3.6, "fy25": 4.3, "delta": 0.7}, {"name": "ヨーロッパ", "fy23": 2.4, "fy25": 2.7, "delta": 0.3}, {"name": "その他", "fy23": 4.7, "fy25": 7.7, "delta": 3.0}], "trend": [0.1, 1.5, 0.8, 3.4, 5.5]}}, "ips": {"初音ミク": {"regions": [{"name": "日本", "fy23": 52.1, "fy25": 32.4, "delta": -19.7}, {"name": "中国", "fy23": 14.2, "fy25": 30.9, "delta": 16.7}, {"name": "台湾", "fy23": 6.2, "fy25": 4.9, "delta": -1.3}, {"name": "韓国", "fy23": 2.9, "fy25": 6.5, "delta": 3.6}, {"name": "アメリカ", "fy23": 12.0, "fy25": 12.2, "delta": 0.3}, {"name": "ヨーロッパ", "fy23": 2.4, "fy25": 4.2, "delta": 1.8}, {"name": "その他", "fy23": 10.3, "fy25": 8.9, "delta": -1.4}], "trend": [0.2, 9.1, 10.0, 19.3, 19.6]}, "ブルーアーカイブ": {"regions": [{"name": "日本", "fy23": 92.5, "fy25": 54.5, "delta": -38.0}, {"name": "中国", "fy23": 0.0, "fy25": 20.4, "delta": 20.4}, {"name": "台湾", "fy23": 0.0, "fy25": 5.4, "delta": 5.4}, {"name": "韓国", "fy23": 7.5, "fy25": 12.4, "delta": 4.9}, {"name": "アメリカ", "fy23": 0.0, "fy25": 2.7, "delta": 2.7}, {"name": "ヨーロッパ", "fy23": 0.0, "fy25": 0.5, "delta": 0.5}, {"name": "その他", "fy23": 0.0, "fy25": 4.2, "delta": 4.2}], "trend": [0.0, 0.5, 11.1, 19.2, 12.7]}, "BanG Dream!": {"regions": [{"name": "日本", "fy23": 0.0, "fy25": 23.7, "delta": 23.7}, {"name": "中国", "fy23": 0.0, "fy25": 64.9, "delta": 64.9}, {"name": "台湾", "fy23": 0.0, "fy25": 8.0, "delta": 8.0}, {"name": "韓国", "fy23": 0.0, "fy25": 1.5, "delta": 1.5}, {"name": "アメリカ", "fy23": 0.0, "fy25": 0.8, "delta": 0.8}, {"name": "ヨーロッパ", "fy23": 0.0, "fy25": 0.0, "delta": 0.0}, {"name": "その他", "fy23": 0.0, "fy25": 1.1, "delta": 1.1}], "trend": [0.0, 0.0, 1.8, 9.1, 6.6]}, "Fate/GO": {"regions": [{"name": "日本", "fy23": 79.2, "fy25": 55.7, "delta": -23.5}, {"name": "中国", "fy23": 9.4, "fy25": 24.0, "delta": 14.6}, {"name": "台湾", "fy23": 4.0, "fy25": 5.8, "delta": 1.9}, {"name": "韓国", "fy23": 1.2, "fy25": 3.7, "delta": 2.5}, {"name": "アメリカ", "fy23": 2.5, "fy25": 4.9, "delta": 2.4}, {"name": "ヨーロッパ", "fy23": 0.6, "fy25": 0.9, "delta": 0.3}, {"name": "その他", "fy23": 3.1, "fy25": 5.0, "delta": 1.8}], "trend": [0.1, 3.1, 3.0, 5.6, 2.2]}, "フリーレン": {"regions": [{"name": "日本", "fy23": 0.0, "fy25": 37.6, "delta": 37.6}, {"name": "中国", "fy23": 0.0, "fy25": 22.9, "delta": 22.9}, {"name": "台湾", "fy23": 0.0, "fy25": 8.3, "delta": 8.3}, {"name": "韓国", "fy23": 0.0, "fy25": 6.1, "delta": 6.1}, {"name": "アメリカ", "fy23": 0.0, "fy25": 11.6, "delta": 11.6}, {"name": "ヨーロッパ", "fy23": 0.0, "fy25": 4.8, "delta": 4.8}, {"name": "その他", "fy23": 0.0, "fy25": 8.8, "delta": 8.8}], "trend": [0.0, 0.0, 4.6, 6.1, 5.0]}, "ぼっち・ざ・ろっく！": {"regions": [{"name": "日本", "fy23": 43.3, "fy25": 44.4, "delta": 1.1}, {"name": "中国", "fy23": 24.6, "fy25": 27.4, "delta": 2.8}, {"name": "台湾", "fy23": 8.9, "fy25": 6.4, "delta": -2.5}, {"name": "韓国", "fy23": 5.7, "fy25": 12.8, "delta": 7.1}, {"name": "アメリカ", "fy23": 10.2, "fy25": 3.1, "delta": -7.1}, {"name": "ヨーロッパ", "fy23": 1.1, "fy25": 0.9, "delta": -0.2}, {"name": "その他", "fy23": 6.2, "fy25": 5.1, "delta": -1.2}], "trend": [0.0, 2.5, 7.9, 5.0, 0.9]}, "呪術廻戦": {"regions": [{"name": "日本", "fy23": 50.8, "fy25": 47.8, "delta": -3.0}, {"name": "中国", "fy23": 10.3, "fy25": 8.7, "delta": -1.6}, {"name": "台湾", "fy23": 6.0, "fy25": 5.1, "delta": -0.9}, {"name": "韓国", "fy23": 3.2, "fy25": 3.9, "delta": 0.7}, {"name": "アメリカ", "fy23": 16.7, "fy25": 9.5, "delta": -7.2}, {"name": "ヨーロッパ", "fy23": 2.8, "fy25": 15.5, "delta": 12.7}, {"name": "その他", "fy23": 10.2, "fy25": 9.6, "delta": -0.6}], "trend": [0.1, 1.4, 4.6, 1.6, 0.7]}, "グリッドマンU": {"regions": [{"name": "日本", "fy23": 86.4, "fy25": 61.7, "delta": -24.7}, {"name": "中国", "fy23": 5.5, "fy25": 17.6, "delta": 12.1}, {"name": "台湾", "fy23": 2.4, "fy25": 8.2, "delta": 5.7}, {"name": "韓国", "fy23": 2.5, "fy25": 6.7, "delta": 4.2}, {"name": "アメリカ", "fy23": 1.0, "fy25": 1.5, "delta": 0.5}, {"name": "ヨーロッパ", "fy23": 0.2, "fy25": 0.6, "delta": 0.4}, {"name": "その他", "fy23": 2.0, "fy25": 3.8, "delta": 1.8}], "trend": [0.0, 3.0, 8.8, 1.8, 1.3]}, "ホロライブ": {"regions": [{"name": "日本", "fy23": 59.5, "fy25": 63.6, "delta": 4.1}, {"name": "中国", "fy23": 2.1, "fy25": 5.4, "delta": 3.3}, {"name": "台湾", "fy23": 15.5, "fy25": 14.2, "delta": -1.3}, {"name": "韓国", "fy23": 2.7, "fy25": 4.1, "delta": 1.4}, {"name": "アメリカ", "fy23": 9.6, "fy25": 4.8, "delta": -4.8}, {"name": "ヨーロッパ", "fy23": 2.0, "fy25": 1.8, "delta": -0.2}, {"name": "その他", "fy23": 8.5, "fy25": 6.0, "delta": -2.5}], "trend": [0.1, 15.3, 9.3, 6.9, 4.0]}}};
+
 // セグメント→ブランド マッピング（セグメントフィルターがブランドチャートにも連動）
 const SEG_BRAND = {
   'フィギュア': ['ねんどろいど','スケール','figma','POP UP PARADE'],
@@ -371,6 +375,7 @@ const SEG_BRAND = {
 };
 
 const F = {brand:'', region:'', segment:'', ip:''};
+const SEL = {brand:'', ip:''}; // ドリルダウン選択
 const C = {};
 
 function filtBrands() {
@@ -427,7 +432,7 @@ function renderBrandRank() {
     const w27=Math.min(b.r27,100),w28=Math.min(b.r28,100);
     const row=document.createElement('div'); row.className='rkrow';
     row.style.cursor='pointer';
-    row.addEventListener('click',()=>selectBrand(b.name));
+    row.addEventListener('click',()=>drillBrand(b.name));
     row.innerHTML=`<span class="rnn ${i<3?'hi':''}">${i+1}</span><span class="rnm" title="${b.name}">${b.name}</span>
       <div class="rbar">
         <div style="position:absolute;top:0;left:0;width:${w27}%;height:100%;background:#3b82f6;border-radius:3px;opacity:.85;"></div>
@@ -594,17 +599,113 @@ function selectIP(name) {
   }
 }
 
+
+// ── ドリルダウン：ブランドまたはIPを選択して全チャートを切り替え ──
+function drillBrand(name) {
+  if (SEL.brand === name) { SEL.brand=''; SEL.ip=''; resetDrill(); return; }
+  SEL.brand = name; SEL.ip = '';
+  const d = DRILL.brands[name];
+  if (!d) return;
+  // IP chart
+  const ips = d.ips;
+  C.ip.setOption({
+    yAxis:{type:'category',data:ips.map(x=>x.name)},
+    series:[
+      {name:'2024',type:'bar',barMaxWidth:9,data:ips.map(x=>({value:x.fy24,itemStyle:{color:'#e2e8f0',borderRadius:2}}))},
+      {name:'2025',type:'bar',barMaxWidth:9,
+       data:ips.map(x=>({value:x.fy25,itemStyle:{color:x.delta>=0?'#22c55e':'#ef4444',borderRadius:2}})),
+       label:{show:true,position:'right',fontSize:8,formatter:p=>{const v=ips[p.dataIndex];return `${v.delta>=0?'▲':'▼'}${Math.abs(v.delta).toFixed(1)}`;},color:p=>ips[p.dataIndex].delta>=0?'#22c55e':'#ef4444'}
+      }
+    ]
+  },true);
+  // Region chart
+  const regs = d.regions.filter(r=>r.fy25>0||r.fy23>0);
+  C.region.setOption({
+    yAxis:{type:'category',data:regs.map(r=>r.name)},
+    series:[
+      {name:'2023',type:'bar',barMaxWidth:9,data:regs.map(r=>r.fy23),itemStyle:{color:'#e2e8f0',borderRadius:2}},
+      {name:'2025',type:'bar',barMaxWidth:9,
+       data:regs.map(r=>({value:r.fy25,itemStyle:{color:r.delta>0?'#3b82f6':'#94a3b8',borderRadius:2}})),
+       label:{show:true,position:'right',fontSize:8,formatter:p=>{const v=regs[p.dataIndex];return `${v.delta>0?'+':''}${v.delta}pt`;},color:p=>regs[p.dataIndex].delta>0?'#3b82f6':'#ef4444'}
+      }
+    ]
+  },true);
+  // Trend: overlay brand line
+  const tr = d.trend;
+  C.trend.setOption({
+    series:[
+      {},{},{},
+      {name:name,type:'line',data:[null,tr[1]||null,tr[2]||null,tr[3]||null,null,null],
+       lineStyle:{color:'#f59e0b',width:2,type:'dashed'},itemStyle:{color:'#f59e0b'},symbol:'circle',symbolSize:5}
+    ]
+  });
+  showDrillBadge(name, 'brand');
+}
+
+function drillIP(name) {
+  if (SEL.ip === name) { SEL.ip=''; resetIPDrill(); return; }
+  SEL.ip = name;
+  const d = DRILL.ips[name];
+  if (!d) { renderIP(); return; }
+  // Region chart: IP の地域シェアに切り替え
+  const regs = d.regions.filter(r=>r.fy25>0||r.fy23>0);
+  C.region.setOption({
+    yAxis:{type:'category',data:regs.map(r=>r.name)},
+    series:[
+      {name:'2023',type:'bar',barMaxWidth:9,data:regs.map(r=>r.fy23),itemStyle:{color:'#e2e8f0',borderRadius:2}},
+      {name:'2025',type:'bar',barMaxWidth:9,
+       data:regs.map(r=>({value:r.fy25,itemStyle:{color:r.delta>0?'#3b82f6':'#94a3b8',borderRadius:2}})),
+       label:{show:true,position:'right',fontSize:8,formatter:p=>{const v=regs[p.dataIndex];return `${v.delta>0?'+':''}${v.delta}pt`;},color:p=>regs[p.dataIndex].delta>0?'#3b82f6':'#ef4444'}
+      }
+    ]
+  },true);
+  // IP chart: 選択IP強調
+  F.ip = name; renderIP();
+  // Trend overlay
+  const tr = d.trend;
+  C.trend.setOption({
+    series:[
+      {},{},{},
+      {name:name,type:'line',data:[null,tr[1]||null,tr[2]||null,tr[3]||null,null,null],
+       lineStyle:{color:'#a855f7',width:2,type:'dashed'},itemStyle:{color:'#a855f7'},symbol:'circle',symbolSize:5}
+    ]
+  });
+  showDrillBadge(name, 'ip');
+}
+
+function resetDrill() {
+  SEL.brand=''; SEL.ip=''; F.ip='';
+  renderBrand(); renderIP(); renderRegion();
+  C.trend.setOption({series:[{},{},{},{name:'',data:[]}]});
+  hideDrillBadge();
+}
+function resetIPDrill() {
+  SEL.ip=''; F.ip='';
+  renderIP(); renderRegion();
+  C.trend.setOption({series:[{},{},{},{name:'',data:[]}]});
+  hideDrillBadge();
+}
+
+function showDrillBadge(name, type) {
+  const badge = document.getElementById('drillBadge');
+  badge.textContent = (type==='brand'?'ブランド':'IP') + ': ' + name + '　✕ 解除';
+  badge.style.display='flex';
+}
+function hideDrillBadge() {
+  document.getElementById('drillBadge').style.display='none';
+}
+
 function bindClicks() {
   // ブランド棒グラフ
-  C.brand.on('click', params => selectBrand(params.name));
+  C.brand.on('click', params => drillBrand(params.name));
   // 地域棒グラフ
   C.region.on('click', params => selectRegion(params.name));
   // セグメント棒グラフ
   C.segment.on('click', params => selectSegment(params.name));
   // IP棒グラフ
-  C.ip.on('click', params => selectIP(params.name));
+  C.ip.on('click', params => drillIP(params.name));
   // Summary ブランドグラフ
-  C.summaryBrand.on('click', params => selectBrand(params.name));
+  C.summaryBrand.on('click', params => drillBrand(params.name));
   // IPバッジのクリアボタン
   document.getElementById('ipSelBadge').addEventListener('click', () => selectIP(F.ip));
   // チャート領域にポインターカーソル
