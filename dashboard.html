@@ -176,7 +176,7 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
       </div>
       <div class="btm">
         <div class="card">
-          <div class="ctitle"><span class="chl">IP別ランキング【FY24→FY25】</span></div>
+          <div class="ctitle"><span class="chl">IP別ランキング【2024→2025】</span><span id="ipSelBadge" class="ctag" style="display:none;cursor:pointer;" title="クリックで解除"></span></div>
           <div id="chartIP"></div>
         </div>
         <div class="card">
@@ -370,7 +370,7 @@ const SEG_BRAND = {
   'トイ':       ['くじ','ブラインドBOX'],
 };
 
-const F = {brand:'', region:'', segment:''};
+const F = {brand:'', region:'', segment:'', ip:''};
 const C = {};
 
 function filtBrands() {
@@ -426,6 +426,8 @@ function renderBrandRank() {
     const col=b.r27>=80?'#22c55e':b.r27>=50?'#f97316':'#ef4444';
     const w27=Math.min(b.r27,100),w28=Math.min(b.r28,100);
     const row=document.createElement('div'); row.className='rkrow';
+    row.style.cursor='pointer';
+    row.addEventListener('click',()=>selectBrand(b.name));
     row.innerHTML=`<span class="rnn ${i<3?'hi':''}">${i+1}</span><span class="rnm" title="${b.name}">${b.name}</span>
       <div class="rbar">
         <div style="position:absolute;top:0;left:0;width:${w27}%;height:100%;background:#3b82f6;border-radius:3px;opacity:.85;"></div>
@@ -439,18 +441,23 @@ function renderBrandRank() {
 
 function renderIP() {
   const sorted=[...DATA.ips].sort((a,b)=>b.fy25-a.fy25);
+  const sel = F.ip;
   C.ip.setOption({
     grid:{top:4,right:38,bottom:6,left:118},
     xAxis:{type:'value',axisLabel:{fontSize:9,color:'#94a3b8',formatter:v=>v+'億'},splitLine:{lineStyle:{color:'#f1f5f9'}}},
-    yAxis:{type:'category',data:sorted.map(d=>d.name),axisLabel:{fontSize:9,color:'#374151'}},
-    tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...TOOLTIP,formatter:params=>{const d=sorted.find(x=>x.name===params[0]?.axisValue)||{};const s=d.delta>=0?'+':'';return `<b>${d.name}</b><br/>FY24: ${d.fy24}億<br/>FY25: ${d.fy25}億<br/>差: <b style="color:${d.delta>=0?'#22c55e':'#ef4444'}">${s}${d.delta.toFixed(2)}億</b>`;}},
+    yAxis:{type:'category',data:sorted.map(d=>d.name),
+      axisLabel:{fontSize:9,color:p=>(!sel||sorted[p]?.name===sel)?'#374151':'#cbd5e1'}},
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'},...TOOLTIP,formatter:params=>{const d=sorted.find(x=>x.name===params[0]?.axisValue)||{};const s=d.delta>=0?'+':'';return `<b>${d.name}</b><br/>2024: ${d.fy24}億<br/>2025: ${d.fy25}億<br/>差: <b style="color:${d.delta>=0?'#22c55e':'#ef4444'}">${s}${d.delta.toFixed(2)}億</b>`;}},
     series:[
-      {name:'FY24',type:'bar',data:sorted.map(d=>d.fy24),barMaxWidth:9,itemStyle:{color:'#e2e8f0',borderRadius:2}},
-      {name:'FY25',type:'bar',data:sorted.map(d=>d.fy25),barMaxWidth:9,
-       itemStyle:{color:p=>sorted[p.dataIndex].delta>=0?'#22c55e':'#ef4444',borderRadius:2},
-       label:{show:true,position:'right',fontSize:8,formatter:p=>{const d=sorted[p.dataIndex];return `${d.delta>=0?'▲':'▼'}${Math.abs(d.delta).toFixed(1)}`;},color:p=>sorted[p.dataIndex].delta>=0?'#22c55e':'#ef4444'}},
+      {name:'2024',type:'bar',barMaxWidth:9,
+       data:sorted.map(d=>({value:d.fy24,itemStyle:{color:(!sel||d.name===sel)?'#e2e8f0':'rgba(226,232,240,0.25)',borderRadius:2}}))},
+      {name:'2025',type:'bar',barMaxWidth:9,
+       data:sorted.map(d=>({value:d.fy25,itemStyle:{color:(!sel||d.name===sel)?(d.delta>=0?'#22c55e':'#ef4444'):'rgba(226,232,240,0.25)',borderRadius:2}})),
+       label:{show:true,position:'right',fontSize:8,
+        formatter:p=>{const d=sorted[p.dataIndex];return `${d.delta>=0?'▲':'▼'}${Math.abs(d.delta).toFixed(1)}`;},
+        color:p=>{const d=sorted[p.dataIndex];return(!sel||d.name===sel)?(d.delta>=0?'#22c55e':'#ef4444'):'#e2e8f0';}}},
     ]
-  });
+  },true);
 }
 
 function renderRegion() {
@@ -553,6 +560,57 @@ function initAll(){
   renderTrend(); renderBrand(); renderBrandRank();
   renderIP(); renderRegion(); renderSegment();
   renderGauge(); renderSummaryBrand();
+  bindClicks();
+}
+
+// ── クリック共通ヘルパー ──
+function selectBrand(name) {
+  const sel = document.getElementById('fltBrand');
+  const val = F.brand === name ? '' : name;
+  sel.value = val; sel.className = 'fs'+(val?' on':'');
+  F.brand = val; renderBrand(); renderBrandRank();
+}
+function selectRegion(name) {
+  const sel = document.getElementById('fltReg');
+  const val = F.region === name ? '' : name;
+  sel.value = val; sel.className = 'fs'+(val?' on':'');
+  F.region = val; renderRegion();
+}
+function selectSegment(name) {
+  const sel = document.getElementById('fltSeg');
+  const val = F.segment === name ? '' : name;
+  sel.value = val; sel.className = 'fs'+(val?' on':'');
+  F.segment = val; renderSegment(); renderBrand(); renderBrandRank();
+}
+function selectIP(name) {
+  F.ip = F.ip === name ? '' : name;
+  renderIP();
+  const badge = document.getElementById('ipSelBadge');
+  if (F.ip) {
+    badge.textContent = '✕ ' + F.ip + ' 選択中';
+    badge.style.display = ''; badge.className = 'ctag on';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function bindClicks() {
+  // ブランド棒グラフ
+  C.brand.on('click', params => selectBrand(params.name));
+  // 地域棒グラフ
+  C.region.on('click', params => selectRegion(params.name));
+  // セグメント棒グラフ
+  C.segment.on('click', params => selectSegment(params.name));
+  // IP棒グラフ
+  C.ip.on('click', params => selectIP(params.name));
+  // Summary ブランドグラフ
+  C.summaryBrand.on('click', params => selectBrand(params.name));
+  // IPバッジのクリアボタン
+  document.getElementById('ipSelBadge').addEventListener('click', () => selectIP(F.ip));
+  // チャート領域にポインターカーソル
+  ['chartBrand','chartIP','chartRegion','chartSegment','chartSummaryBrand'].forEach(id => {
+    document.getElementById(id).style.cursor = 'pointer';
+  });
 }
 
 document.addEventListener('DOMContentLoaded', initAll);
