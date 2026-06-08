@@ -125,6 +125,12 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
 /* ── Monthly chart ── */
 #chartMonthly{height:140px;}
 
+/* ── Clickable summary cards ── */
+.skc{cursor:pointer;transition:box-shadow .15s,transform .1s;}
+.skc:hover{box-shadow:0 0 0 2px #3b82f6;transform:translateY(-1px);}
+.stile{cursor:pointer;transition:transform .1s,box-shadow .1s;}
+.stile:hover{transform:translateX(4px);box-shadow:2px 0 0 0 currentColor;}
+
 /* ── Scenario simulator ── */
 .scsim{background:#fff;border-radius:8px;border:1px solid #e2e8f0;padding:14px 16px;}
 .scrow{display:grid;grid-template-columns:90px 1fr 46px 66px;gap:4px;align-items:center;padding:3px 0;}
@@ -267,22 +273,22 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
 <!-- ═══ Summary ═══ -->
 <div id="view-summary" class="page" style="display:none;">
   <div class="skrow">
-    <div class="skc">
+    <div class="skc" title="実績詳細を表示" onclick="switchTab('detail')">
       <div class="sclbl">2025年 実績</div>
       <div class="scval" style="color:#3b82f6;">220<span style="font-size:16px;font-weight:400;color:#94a3b8;"> 億円</span></div>
       <div class="scbdg"><span class="badge bg">▲ 前年比+0.0%</span><span class="badge bb">対計画 96%</span></div>
     </div>
-    <div class="skc">
-      <div class="sclbl">FY26 H1進捗（〜3月末）</div>
-      <div class="scval" style="color:#f97316;">110.9<span style="font-size:16px;font-weight:400;color:#94a3b8;"> 億円</span></div>
-      <div class="scbdg"><span class="badge br">計画進捗 44.3%</span><span class="badge bgy">計画 250億</span></div>
+    <div class="skc" title="月次進捗を詳細表示" onclick="switchTab('detail');setTimeout(()=>document.getElementById('chartMonthly').scrollIntoView({behavior:'smooth'}),100)">
+      <div class="sclbl">FY26進捗（〜6月末）</div>
+      <div class="scval" style="color:#f97316;">167.7<span style="font-size:16px;font-weight:400;color:#94a3b8;"> 億円</span></div>
+      <div class="scbdg"><span class="badge bo">計画進捗 67.1%</span><span class="badge bgy">計画 250億</span></div>
     </div>
-    <div class="skc">
+    <div class="skc" title="ブランド別ギャップを確認" onclick="switchTab('detail');setTimeout(()=>document.getElementById('brandRank').scrollIntoView({behavior:'smooth'}),100)">
       <div class="sclbl">2027年 目標ギャップ</div>
       <div class="scval" style="color:#f97316;">97<span style="font-size:16px;font-weight:400;color:#94a3b8;"> 億円不足</span></div>
       <div class="scbdg"><span class="badge bo">目標 317億</span><span class="badge bgy">達成率 69.4%</span></div>
     </div>
-    <div class="skc">
+    <div class="skc" title="2028年目標の詳細を確認" onclick="switchTab('detail');setTimeout(()=>document.getElementById('chartBrand').scrollIntoView({behavior:'smooth'}),100)">
       <div class="sclbl">2028年 目標ギャップ</div>
       <div class="scval" style="color:#ef4444;">180<span style="font-size:16px;font-weight:400;color:#94a3b8;"> 億円不足</span></div>
       <div class="scbdg"><span class="badge br">目標 400億</span><span class="badge bgy">達成率 55.0%</span></div>
@@ -329,10 +335,10 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
 
     <div class="scard">
       <div class="sctitle">戦略優先事項</div>
-      <div class="stile" style="background:#eff6ff;border-color:#3b82f6;"><div class="stn" style="color:#1d4ed8;">×13.8</div><div class="stl" style="color:#1e40af;">figma 28年倍率<br/>最大成長ブランド</div></div>
-      <div class="stile" style="background:#fff7ed;border-color:#f97316;"><div class="stn" style="color:#f97316;">×60</div><div class="stl" style="color:#9a3412;">ブラインドBOX 28年倍率<br/>新市場開拓</div></div>
-      <div class="stile" style="background:#f0fdf4;border-color:#22c55e;"><div class="stn" style="color:#16a34a;">+11pt</div><div class="stl" style="color:#15803d;">中国シェア拡大 23年→25年<br/>海外展開の主力</div></div>
-      <div class="stile" style="background:#fef2f2;border-color:#ef4444;"><div class="stn" style="color:#ef4444;">−5.1pt</div><div class="stl" style="color:#991b1b;">アメリカ シェア低下<br/>要テコ入れ</div></div>
+      <div class="stile" style="background:#eff6ff;border-color:#3b82f6;" title="figmaの詳細を確認" onclick="applyDrill('brand','figma');switchTab('detail')"><div class="stn" style="color:#1d4ed8;">×18.3</div><div class="stl" style="color:#1e40af;">figma 28年倍率<br/>最大成長ブランド ↗</div></div>
+      <div class="stile" style="background:#fff7ed;border-color:#f97316;" title="ブラインドBOXの詳細を確認" onclick="applyDrill('brand','ブラインドBOX');switchTab('detail')"><div class="stn" style="color:#f97316;">×8.2</div><div class="stl" style="color:#9a3412;">ブラインドBOX 28年倍率<br/>新市場開拓 ↗</div></div>
+      <div class="stile" style="background:#f0fdf4;border-color:#22c55e;" title="中国地域の詳細を確認" onclick="applyDrill('region','中国');switchTab('detail')"><div class="stn" style="color:#16a34a;">+11pt</div><div class="stl" style="color:#15803d;">中国シェア拡大 23年→25年<br/>海外展開の主力 ↗</div></div>
+      <div class="stile" style="background:#fef2f2;border-color:#ef4444;" title="アメリカ地域の詳細を確認" onclick="applyDrill('region','アメリカ');switchTab('detail')"><div class="stn" style="color:#ef4444;">−5.1pt</div><div class="stl" style="color:#991b1b;">アメリカ シェア低下<br/>要テコ入れ ↗</div></div>
     </div>
   </div>
 
@@ -452,10 +458,15 @@ function renderTrend() {
     yAxis:{type:'value',name:'億円',nameTextStyle:{fontSize:9,color:'#94a3b8'},axisLabel:{fontSize:9,color:'#94a3b8'},splitLine:{lineStyle:{color:'#f1f5f9'}},min:0,max:450},
     tooltip:{trigger:'axis',...TOOLTIP,formatter:params=>{let s=`<b>${params[0].axisValue}</b><br/>`;params.forEach(p=>{if(p.value!=null)s+=`${p.marker}${p.seriesName}: <b>${p.value}億円</b><br/>`;});return s;}},
     series:[
-      {name:'実績',type:'line',data:[207,222,230,null,null,null],symbol:'circle',symbolSize:6,lineStyle:{color:'#3b82f6',width:2.5},itemStyle:{color:'#3b82f6'},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(59,130,246,.12)'},{offset:1,color:'rgba(59,130,246,.01)'}]}}},
-      {name:'計画',type:'line',data:[null,null,230,250,null,null],lineStyle:{color:'#94a3b8',type:'dashed',width:1.5},itemStyle:{color:'#94a3b8'},symbol:'circle',symbolSize:5},
-      {name:'2027/28年目標',type:'line',data:[null,null,null,null,317,400],lineStyle:{color:'#e74c3c',width:2.5},itemStyle:{color:'#e74c3c'},symbol:'diamond',symbolSize:8,
-       markPoint:{data:[{coord:['2026',110.9],value:'110.9',symbol:'circle',symbolSize:10,itemStyle:{color:'#f97316'},label:{fontSize:9,color:'#fff'}}]}},
+      {name:'実績',type:'line',
+       data:DATA.sales.actual.map((v,i)=>i===5&&v!=null
+         ?{value:v,symbol:'emptyCircle',symbolSize:10,itemStyle:{color:'#f97316'}}
+         :v),
+       symbol:'circle',symbolSize:6,lineStyle:{color:'#3b82f6',width:2.5},itemStyle:{color:'#3b82f6'},
+       areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(59,130,246,.12)'},{offset:1,color:'rgba(59,130,246,.01)'}]}},
+       markPoint:{data:[{coord:['2026',167.7],value:'途中',symbol:'pin',symbolSize:32,itemStyle:{color:'#f97316'},label:{fontSize:8,color:'#fff'}}]}},
+      {name:'計画',type:'line',data:DATA.sales.plan,lineStyle:{color:'#94a3b8',type:'dashed',width:1.5},itemStyle:{color:'#94a3b8'},symbol:'circle',symbolSize:5},
+      {name:'2027/28年目標',type:'line',data:DATA.sales.target,lineStyle:{color:'#e74c3c',width:2.5},itemStyle:{color:'#e74c3c'},symbol:'diamond',symbolSize:8},
     ]
   });
 }
@@ -645,22 +656,33 @@ function updateKpiPanel(type, name) {
   if (type === 'brand') {
     const b = DATA.brands.find(x => x.name === name) || {};
     const f25 = b.fy25 ?? '--', f27 = b.fy27 ?? '--', f28 = b.fy28 ?? '--';
+    const f26 = DRILL.brands?.[name]?.trend?.[4] ?? null;
     const g27 = (f27 !== '--' && f25 !== '--') ? '+' + (f27 - f25).toFixed(1) + '億' : '--';
     const g28 = (f28 !== '--' && f25 !== '--') ? '+' + (f28 - f25).toFixed(1) + '億' : '--';
     const pct27 = (f27 !== '--' && f25 !== '--') ? Math.round(f25 / f27 * 100) : 0;
+    const pct26to27 = (f26 != null && f27 !== '--') ? Math.round(f26 / f27 * 100) : pct27;
     const col27 = pct27 >= 80 ? '#22c55e' : pct27 >= 60 ? '#f97316' : '#ef4444';
+    const col26 = pct26to27 >= 80 ? '#22c55e' : pct26to27 >= 60 ? '#f97316' : '#ef4444';
     setEl('k1lbl', '2025年実績'); setEl('k1val', String(f25)); setEl('k1sub', '億円'); document.getElementById('k1val').style.color = '';
     setEl('k2lbl', '2027年目標'); setEl('k2val', String(f27)); setEl('k2sub', '億円'); document.getElementById('k2val').style.color = '';
     setEl('k3lbl', '2028年目標'); setEl('k3val', String(f28)); setEl('k3sub', '億円'); document.getElementById('k3val').style.color = '';
     setEl('m1n', '2027年必要成長'); setEl('m1v', g27, '#f97316');
     setEl('m2n', '2028年必要成長'); setEl('m2v', g28, '#ef4444');
-    setEl('m3n', '2027年達成率');   setEl('m3v', pct27 + '%', col27);
+    setEl('m3n', 'FY26見込（推計）'); setEl('m3v', f26 != null ? f26 + '億' : '--', '#64748b');
     setEl('m4n', '目標倍率');       setEl('m4v', String(b.mult ?? '--'), '#3b82f6');
-    setEl('glabel', name + ' 2027年目標進捗');
-    setElHTML('gsub2', '目標 <b style="color:#1e293b;">' + f27 + '億円</b>');
-    setElHTML('gnum', f25 + '<span style="font-size:11px;font-weight:400;color:#94a3b8;">億</span>');
-    setEl('gsub', '達成率 ' + pct27 + '%');
-    renderGauge(pct27);
+    if (f26 != null) {
+      setEl('glabel', name + ' FY26→FY27進捗');
+      setElHTML('gsub2', 'FY27目標 <b style="color:#1e293b;">' + f27 + '億円</b>');
+      setElHTML('gnum', f26 + '<span style="font-size:11px;font-weight:400;color:#94a3b8;">億</span>');
+      setEl('gsub', 'FY26/FY27 ' + pct26to27 + '%');
+      renderGauge(pct26to27);
+    } else {
+      setEl('glabel', name + ' 2027年目標進捗');
+      setElHTML('gsub2', '目標 <b style="color:#1e293b;">' + f27 + '億円</b>');
+      setElHTML('gnum', f25 + '<span style="font-size:11px;font-weight:400;color:#94a3b8;">億</span>');
+      setEl('gsub', '達成率 ' + pct27 + '%');
+      renderGauge(pct27);
+    }
 
   } else if (type === 'ip') {
     const ip = DATA.ips.find(x => x.name === name) || {};
@@ -924,11 +946,17 @@ function applyDrill(type, name) {
     }
   } catch(e){ console.error('drill④region', e); }
 
-  // ⑤ セグメント：ブランド選択時のみ関連セグメントを強調
+  // ⑤ セグメント：ブランド/IP/地域クリックで関連セグメントを強調
   try {
+    const relSegs = new Set();
     if (type === 'brand') {
-      const relSegs = new Set();
       for (const [s, bl] of Object.entries(SEG_BRAND)) { if (bl.includes(name)) relSegs.add(s); }
+    } else {
+      for (const b of (d.brands||[])) {
+        for (const [s, bl] of Object.entries(SEG_BRAND)) { if (bl.includes(b.name)) relSegs.add(s); }
+      }
+    }
+    if (relSegs.size > 0) {
       const segs = [...filtSegments()].sort((a,b)=>b.gross-a.gross);
       C.segment.setOption({
         grid:  {top:4, right:10, bottom:32, left:10},
@@ -939,7 +967,7 @@ function applyDrill(type, name) {
                 axisLabel:{fontSize:9, color:'#94a3b8', formatter:v=>v+'%'},
                 splitLine:{lineStyle:{color:'#f1f5f9'}}},
         tooltip: {trigger:'item', ...TOOLTIP,
-                  formatter:p=>`<b>${p.name}</b><br/>粗利率: <b>${p.value}%</b>`},
+                  formatter:p=>`<b>${p.name}</b><br/>粗利率: <b>${p.value}%</b><br/>3年累計: ${DATA.segments.find(d=>d.name===p.name)?.rev}億円`},
         series: [{type:'bar', barMaxWidth:40,
           data: segs.map(sg=>({value:sg.gross, itemStyle:{
             color: relSegs.has(sg.name)
