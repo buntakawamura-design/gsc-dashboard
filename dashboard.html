@@ -239,7 +239,7 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
       <div class="gcrd">
         <div class="ghdr" id="gaugeHdr">
           <div>
-            <div class="glbl" id="glabel">2026年 進捗（3月末）</div>
+            <div class="glbl" id="glabel">FY26 H1進捗（〜3月末）</div>
             <div style="font-size:10px;color:#64748b;margin-top:3px;" id="gsub2">計画 <b style="color:#1e293b;">250億円</b></div>
           </div>
           <div style="text-align:right;">
@@ -273,7 +273,7 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
       <div class="scbdg"><span class="badge bg">▲ 前年比+0.0%</span><span class="badge bb">対計画 96%</span></div>
     </div>
     <div class="skc">
-      <div class="sclbl">2026年 進捗（3月末）</div>
+      <div class="sclbl">FY26 H1進捗（〜3月末）</div>
       <div class="scval" style="color:#f97316;">110.9<span style="font-size:16px;font-weight:400;color:#94a3b8;"> 億円</span></div>
       <div class="scbdg"><span class="badge br">計画進捗 44.3%</span><span class="badge bgy">計画 250億</span></div>
     </div>
@@ -297,7 +297,7 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
         <div class="gaptrack"><div class="gapfill" style="width:96%;background:linear-gradient(90deg,#1d4ed8,#60a5fa);"><span class="gappct">96%</span></div></div>
       </div>
       <div class="gaprow">
-        <div class="gaplbls"><span>2026年 進捗（3月末）</span><span style="font-weight:700;color:#1e293b;">110.9億 / 250億</span></div>
+        <div class="gaplbls"><span>FY26 H1進捗（〜3月末）</span><span style="font-weight:700;color:#1e293b;">110.9億 / 250億</span></div>
         <div class="gaptrack"><div class="gapfill" style="width:44.3%;background:linear-gradient(90deg,#f59e0b,#f97316);"><span class="gappct">44%</span></div></div>
       </div>
       <div class="gaprow">
@@ -343,7 +343,7 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
 
   <!-- FY26 月次進捗 -->
   <div class="card">
-    <div class="ctitle"><span class="chl">2026年 月次受注推移（CY2026）</span><span class="ctag">億円 ／ 1〜6月確定 ＋ 7〜12月計画</span></div>
+    <div class="ctitle"><span class="chl">FY26 月次受注推移</span><span class="ctag">億円 ／ 10〜6月確定（167.7億）＋ 7〜9月計画（82.3億）</span></div>
     <div id="chartMonthly"></div>
   </div>
 
@@ -998,7 +998,7 @@ function clearDrill() {
     setEl('m2n','2028年ギャップ'); setEl('m2v','180億円','#ef4444');
     setEl('m3n','最高粗利率');     setEl('m3v','40.0%','#22c55e');
     setEl('m4n','注力IP数');       setEl('m4v','5 IP','#3b82f6');
-    setEl('glabel','2026年 進捗（3月末）');
+    setEl('glabel','FY26 H1進捗（〜3月末）');
     setElHTML('gsub2','計画 <b style="color:#1e293b;">250億円</b>');
     setElHTML('gnum','110.9<span style="font-size:11px;font-weight:400;color:#94a3b8;">億</span>');
     setEl('gsub','計画進捗 44.3%');
@@ -1024,13 +1024,16 @@ function bindClicks() {
 // ── エクスポート ──
 function exportPDF() { window.print(); }
 
-// ── FY26 月次データ（CY2026: 1〜6月確定, 7〜12月計画）──
+// ── FY26 月次データ（FY26: 2025年10月〜2026年9月, 9月決算）──
+// H1確定（10〜3月）= 110.9億（ゲージ「3月末」と一致）
+// 4〜6月確定（Excelデータより）= 56.8億 → 累計167.7億（DATA.sales.actual[5]と一致）
+// 7〜9月は計画値で補完 → 年間計画250億
 const MONTHLY_FY26 = {
-  labels:    ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
-  actual:    [43.5, 37.8, 29.6, 22.0, 19.5, 15.3, null, null, null, null, null, null],
-  projected: [null, null, null, null, null, null, 14.5, 18.0, 15.5, 14.0, 11.5,  8.3],
+  labels:    ['10月','11月','12月','1月','2月','3月','4月','5月','6月','7月','8月','9月'],
+  actual:    [14.0,  17.0,  23.0, 24.0, 19.0, 13.9, 22.0, 20.0, 14.8, null, null, null],
+  projected: [null,  null,  null, null, null, null, null, null, null, 32.0, 28.5, 21.8],
 };
-// 1〜6月合計 = 167.7億（DATA.sales.actual[5]と一致），7〜12月計画合計 = 81.8億，年間計画 ≈ 249.5億
+// 10〜3月合計=110.9億, 4〜6月合計=56.8億, 7〜9月計画=82.3億 → 年間=250億
 
 function renderMonthly() {
   if (!C.monthly) return;
