@@ -153,6 +153,98 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
   .page{padding:4px!important;}
   body{background:#fff;}
 }
+
+/* ════════════════════════════════
+   Responsive — Tablet (≤1100px)
+   ════════════════════════════════ */
+@media (max-width:1100px){
+  /* ヘッダー */
+  .hdinfo{display:none;}
+  .fb{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+  /* メインレイアウト：1カラム化 */
+  .lay{grid-template-columns:1fr;}
+
+  /* サイドバー → 横並び3枚 */
+  .rcol{flex-direction:row;align-items:flex-start;}
+  .rcol>*{flex:1;min-width:0;}
+
+  /* 下段3グラフ → 2+1 */
+  .btm{grid-template-columns:1fr 1fr;}
+  .btm>:nth-child(3){grid-column:1/-1;}
+
+  /* Summary */
+  .skrow{grid-template-columns:repeat(2,1fr);}
+  .smain{grid-template-columns:1fr 1fr;}
+  .smain>:nth-child(1){grid-column:1/-1;}
+
+  /* グラフ高さ調整 */
+  #chartBrand{height:260px;}
+  #chartSummaryBrand{height:260px;}
+}
+
+/* ════════════════════════════════
+   Responsive — Mobile (≤767px)
+   ════════════════════════════════ */
+@media (max-width:767px){
+  /* ヘッダー圧縮 */
+  .hd{padding:0 12px;height:44px;}
+  .lsub,.hdinfo{display:none;}
+  .ltext{font-size:12px;}
+  .lmark{width:26px;height:26px;font-size:9px;}
+  .tab{padding:0 10px;font-size:10px;}
+
+  /* フィルターバー折り返し */
+  .fb{height:auto;min-height:40px;flex-wrap:wrap;padding:5px 12px;gap:5px;}
+  .fdiv{display:none;}
+  .fl{font-size:8px;}
+  .fs{font-size:10px;}
+
+  /* ページ余白縮小 */
+  .page{padding:8px 10px 16px;gap:8px;}
+
+  /* メインレイアウト */
+  .lay{grid-template-columns:1fr;}
+
+  /* サイドバー → 縦積み */
+  .rcol{flex-direction:column;}
+
+  /* KPI3グリッド → 下でも横並び維持 */
+  .kpi3{grid-template-columns:repeat(3,1fr);}
+
+  /* 下段グラフ → 1カラム */
+  .btm{grid-template-columns:1fr;}
+  .btm>:nth-child(3){grid-column:auto;}
+
+  /* Summary */
+  .skrow{grid-template-columns:repeat(2,1fr);}
+  .smain{grid-template-columns:1fr;}
+  .smain>:nth-child(1){grid-column:auto;}
+
+  /* グラフ高さ調整 */
+  #chartTrend{height:160px;}
+  #chartBrand{height:260px;}
+  #chartIP{height:220px;}
+  #chartRegion{height:180px;}
+  #chartSegment{height:150px;}
+  #chartGauge{height:80px;}
+  #chartSummaryBrand{height:260px;}
+  #chartMonthly{height:150px;}
+
+  /* テキストサイズ */
+  .scval{font-size:26px;}
+  .kc-val{font-size:17px;}
+  .gnum{font-size:18px;}
+  .stn{font-size:16px;}
+
+  /* シナリオシミュレーター */
+  .scrow{grid-template-columns:72px 1fr 36px 54px;}
+  .sclb2{font-size:9px;}
+
+  /* ランキング */
+  .rkhdr,.rkrow{grid-template-columns:14px 1fr 80px 32px;}
+  .rnm{font-size:9px;}
+}
 </style>
 </head>
 <body>
@@ -1156,7 +1248,11 @@ function updateScenario() {
 }
 
 document.addEventListener('DOMContentLoaded', initAll);
-window.addEventListener('resize', ()=>Object.values(C).forEach(c=>c?.resize?.()));
+let _rsTimer;
+window.addEventListener('resize', ()=>{
+  clearTimeout(_rsTimer);
+  _rsTimer = setTimeout(()=>Object.values(C).forEach(c=>c?.resize?.()), 80);
+});
 </script>
 </body>
 </html>
