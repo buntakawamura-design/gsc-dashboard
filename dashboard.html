@@ -472,7 +472,7 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
 
 <script>
 const DATA = {
-  sales:{years:['2021','2022','2023','2024','2025','2026','2027','2028'],actual:[null,6.0,165.3,221.9,220.0,158.5,null,null],plan:[null,null,null,null,230,247.4,null,null],target:[null,null,null,null,null,null,317,400]},
+  sales:{years:['2021','2022','2023','2024','2025','2026','2027','2028'],actual:[null,6.0,165.3,232.0,226.0,158.5,null,null],plan:[null,null,null,null,230,247.4,null,null],target:[null,null,null,null,null,null,317,400]},
   brands:[
     // fy23/fy24/fy25: IP毎全実績_過去5年.xlsx（会計年度ベース）, shin/sai%: GSCラインナップ master 260410 会計年度fy26比率
     {name:'ねんどろいど',    fy23:74.1,fy24:89.2,fy25:70.6,fy27:90.2,fy28:105,mult:'1.47x',shin:79,sai:21},
@@ -788,7 +788,7 @@ function updateKpiPanel(type, name) {
     const f24 = ip.fy24 ?? '--', f25 = ip.fy25 ?? '--', delta = ip.delta ?? 0;
     const proj26 = ipDrill?.trend?.[4] != null ? ipDrill.trend[4] : '--';
     const brandCnt = (ipDrill?.brands || []).length;
-    const share25 = f25 !== '--' ? (f25 / 220.0 * 100).toFixed(1) : '--';
+    const share25 = f25 !== '--' ? (f25 / 226.0 * 100).toFixed(1) : '--';
     const pctYY = f24 !== '--' ? Math.round(f25 / f24 * 100) : 0;
     const dcol = delta >= 0 ? '#22c55e' : '#ef4444';
     const p26col = proj26 !== '--' && proj26 >= f25 ? '#22c55e' : '#94a3b8';
