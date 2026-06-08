@@ -343,7 +343,7 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
 
   <!-- FY26 月次進捗 -->
   <div class="card">
-    <div class="ctitle"><span class="chl">FY26 月次受注推移</span><span class="ctag">億円 ／ 10〜6月確定（167.7億）＋ 7〜9月計画（82.3億）</span></div>
+    <div class="ctitle"><span class="chl">FY26 月次受注推移（受注締め月基準）</span><span class="ctag">実績167.7億確定 ＋ H2予測82.3億 ／ 計画238.8億（ラインナップ）</span></div>
     <div id="chartMonthly"></div>
   </div>
 
@@ -1024,24 +1024,23 @@ function bindClicks() {
 // ── エクスポート ──
 function exportPDF() { window.print(); }
 
-// ── FY26 月次データ（FY26: 2025年10月〜2026年9月, 9月決算）──
-// H1確定（10〜3月）= 110.9億（ゲージ「3月末」と一致）
-// 4〜6月確定（Excelデータより）= 56.8億 → 累計167.7億（DATA.sales.actual[5]と一致）
-// 7〜9月は計画値で補完 → 年間計画250億
+// ── FY26 月次データ（FY26: 2025年10月〜2026年9月, 9月決算・受注締め月基準）──
+// 出典: GSCラインナップ master 260410「【締め月基準】売上予定」
+// actual: H1(10-3月)=110.9億実績を計画比率で月次按分, Apr-Jun=56.8億(167.7-110.9)を同様に按分
+// projected: 残り82.3億(250-167.7)を7-9月計画比率で按分
 const MONTHLY_FY26 = {
   labels:    ['10月','11月','12月','1月','2月','3月','4月','5月','6月','7月','8月','9月'],
-  actual:    [14.0,  17.0,  23.0, 24.0, 19.0, 13.9, 22.0, 20.0, 14.8, null, null, null],
-  projected: [null,  null,  null, null, null, null, null, null, null, 32.0, 28.5, 21.8],
+  plan:      [14.1,  14.2,  16.6, 16.4, 14.3, 23.0, 22.2, 16.5, 21.1, 24.7, 26.1, 29.6],
+  actual:    [15.9,  16.0,  18.7, 18.4, 16.1, 25.9, 21.1, 15.7, 20.0, null, null, null],
+  projected: [null,  null,  null, null, null, null, null, null, null, 25.3, 26.7, 30.3],
 };
-// 10〜3月合計=110.9億, 4〜6月合計=56.8億, 7〜9月計画=82.3億 → 年間=250億
 
 function renderMonthly() {
   if (!C.monthly) return;
-  const planPerMonth = +(250 / 12).toFixed(1);
   C.monthly.setOption({
     grid: {top:28, right:16, bottom:28, left:44},
     legend: {top:0, right:0, textStyle:{fontSize:9}, itemWidth:10, itemHeight:7,
-      data:['確定受注','H2計画']},
+      data:['確定受注','H2予測','計画（受注締め月）']},
     xAxis: {type:'category', data:MONTHLY_FY26.labels,
       axisLabel:{fontSize:9, color:'#374151'}, axisLine:{lineStyle:{color:'#e2e8f0'}}},
     yAxis: {type:'value', name:'億円', nameTextStyle:{fontSize:9, color:'#94a3b8'},
@@ -1049,24 +1048,27 @@ function renderMonthly() {
     tooltip: {trigger:'axis', ...TOOLTIP,
       formatter: params => {
         const lbl = params[0]?.axisValue;
-        let s = `<b>2026年 ${lbl}</b><br/>`;
+        let s = `<b>FY26 ${lbl}</b><br/>`;
         params.forEach(p => { if (p.value != null) s += `${p.marker}${p.seriesName}: <b>${p.value}億</b><br/>`; });
         return s;
       }
     },
     series:[
-      {name:'確定受注', type:'bar', barMaxWidth:22,
+      {name:'確定受注', type:'bar', barMaxWidth:20, z:3,
        data: MONTHLY_FY26.actual.map(v => ({
          value: v, itemStyle:{color: v != null ? '#2563eb' : 'transparent', borderRadius:[2,2,0,0]}
-       })),
-       markLine:{silent:true, lineStyle:{color:'#94a3b8', type:'dashed', width:1},
-         label:{formatter:'月平均目標', fontSize:8, color:'#94a3b8'},
-         data:[{yAxis: planPerMonth}]}
-      },
-      {name:'H2計画', type:'bar', barMaxWidth:22,
-       data: MONTHLY_FY26.projected.map(v => ({
-         value: v, itemStyle:{color: v != null ? '#bfdbfe' : 'transparent', borderRadius:[2,2,0,0]}
        }))
+      },
+      {name:'H2予測', type:'bar', barMaxWidth:20, z:3,
+       data: MONTHLY_FY26.projected.map(v => ({
+         value: v, itemStyle:{color: v != null ? '#93c5fd' : 'transparent', borderRadius:[2,2,0,0]}
+       }))
+      },
+      {name:'計画（受注締め月）', type:'line', z:4,
+       data: MONTHLY_FY26.plan,
+       lineStyle:{color:'#f97316', type:'dashed', width:1.5},
+       itemStyle:{color:'#f97316'}, symbol:'circle', symbolSize:4,
+       label:{show:false}
       },
     ]
   });
