@@ -121,6 +121,32 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
 .stile:last-child{margin-bottom:0;}
 .stn{font-size:19px;font-weight:800;}
 .stl{font-size:9px;margin-top:2px;line-height:1.3;}
+
+/* ── Monthly chart ── */
+#chartMonthly{height:140px;}
+
+/* ── Scenario simulator ── */
+.scsim{background:#fff;border-radius:8px;border:1px solid #e2e8f0;padding:14px 16px;}
+.scrow{display:grid;grid-template-columns:90px 1fr 46px 66px;gap:4px;align-items:center;padding:3px 0;}
+.sclb2{font-size:10px;font-weight:600;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.scrng{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;background:#e2e8f0;outline:none;cursor:pointer;}
+.scrng::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#3b82f6;cursor:pointer;}
+.scval{font-size:10px;font-weight:700;color:#1d4ed8;text-align:right;}
+.scprj{font-size:10px;font-weight:700;text-align:right;}
+.sctot{display:flex;align-items:center;justify-content:space-between;padding:10px 0 0;margin-top:8px;border-top:2px solid #e2e8f0;}
+.scmtr{height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;margin:4px 0 6px;}
+.scfil{height:100%;border-radius:4px;transition:width .3s;}
+
+/* ── Export button ── */
+.expbtn{padding:4px 10px;border:1px solid #e2e8f0;border-radius:4px;font-size:10px;font-weight:600;color:#64748b;background:#fff;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.expbtn:hover{background:#f8fafc;border-color:#cbd5e1;}
+
+/* ── Print ── */
+@media print{
+  .hd,.fb,.scsim{display:none!important;}
+  .page{padding:4px!important;}
+  body{background:#fff;}
+}
 </style>
 </head>
 <body>
@@ -156,11 +182,13 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
     <option>日本</option><option>中国</option><option>アメリカ</option><option>韓国</option><option>台湾</option><option>ヨーロッパ</option>
   </select>
   <div class="fdiv"></div>
-  <div id="drillBadge" style="display:none;align-items:center;gap:6px;padding:3px 10px;background:#1e293b;color:#f1f5f9;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;" onclick="resetDrill()"></div>
+  <div id="drillBadge" style="display:none;align-items:center;gap:6px;padding:3px 10px;background:#1e293b;color:#f1f5f9;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;" onclick="clearDrill()"></div>
   <span class="fl">基準年</span>
   <select class="fs"><option>2025年</option><option>2024年</option><option>2023年</option></select>
   <span class="fl">表示</span>
   <select class="fs"><option>目標比較</option><option>前年比</option><option>地域別</option></select>
+  <div class="fdiv"></div>
+  <button class="expbtn" onclick="exportPDF()">印刷 / PDF</button>
 </div>
 
 <!-- ═══ 実績詳細 ═══ -->
@@ -311,6 +339,36 @@ body{font-family:'游ゴシック','Yu Gothic','YuGothic',sans-serif;font-size:1
   <div class="card">
     <div class="ctitle"><span class="chl">2025→2028年 ブランド別 成長必要額と目標倍率</span><span class="ctag">億円（2025年実績 ＋ 必要成長額 ＝ 2028年目標）</span></div>
     <div id="chartSummaryBrand"></div>
+  </div>
+
+  <!-- FY26 月次進捗 -->
+  <div class="card">
+    <div class="ctitle"><span class="chl">2026年 月次受注推移（CY2026）</span><span class="ctag">億円 ／ 1〜6月確定 ＋ 7〜12月計画</span></div>
+    <div id="chartMonthly"></div>
+  </div>
+
+  <!-- シナリオシミュレーター -->
+  <div class="scsim">
+    <div class="ctitle" style="margin-bottom:8px;"><span class="chl">2028年目標達成シナリオシミュレーター</span><span style="font-size:9px;color:#94a3b8;font-weight:400;margin-left:auto;">各ブランドの年平均成長率（CAGR）を調整して試算</span></div>
+    <div style="display:grid;grid-template-columns:90px 1fr 46px 66px;gap:4px;padding:0 0 6px;border-bottom:1px solid #f1f5f9;margin-bottom:3px;">
+      <span style="font-size:8px;color:#94a3b8;font-weight:700;">ブランド</span>
+      <span style="font-size:8px;color:#94a3b8;font-weight:700;">年平均成長率（2025→2028）</span>
+      <span style="font-size:8px;color:#94a3b8;font-weight:700;text-align:right;">CAGR</span>
+      <span style="font-size:8px;color:#94a3b8;font-weight:700;text-align:right;">2028年試算</span>
+    </div>
+    <div id="simRows"></div>
+    <div class="sctot">
+      <div>
+        <div style="font-size:9px;color:#94a3b8;font-weight:700;text-transform:uppercase;margin-bottom:2px;">2028年 合計試算</div>
+        <div style="font-size:28px;font-weight:800;letter-spacing:-1px;" id="simTotal">--<span style="font-size:12px;font-weight:400;color:#94a3b8;"> 億円</span></div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:9px;color:#94a3b8;margin-bottom:2px;">目標 400億 達成率</div>
+        <div style="font-size:22px;font-weight:800;" id="simPct">--%</div>
+      </div>
+    </div>
+    <div class="scmtr"><div class="scfil" id="simBar" style="width:0%;background:#3b82f6;"></div></div>
+    <div style="font-size:9px;color:#94a3b8;">※ ねんどろいどどーるはFY28目標なし（現行fy25値で固定）</div>
   </div>
 </div>
 
@@ -606,17 +664,22 @@ function updateKpiPanel(type, name) {
 
   } else if (type === 'ip') {
     const ip = DATA.ips.find(x => x.name === name) || {};
+    const ipDrill = DRILL['ips']?.[name];
     const f24 = ip.fy24 ?? '--', f25 = ip.fy25 ?? '--', delta = ip.delta ?? 0;
+    const proj26 = ipDrill?.trend?.[4] != null ? ipDrill.trend[4] : '--';
+    const brandCnt = (ipDrill?.brands || []).length;
+    const share25 = f25 !== '--' ? (f25 / 220.0 * 100).toFixed(1) : '--';
     const pctYY = f24 !== '--' ? Math.round(f25 / f24 * 100) : 0;
     const dcol = delta >= 0 ? '#22c55e' : '#ef4444';
+    const p26col = proj26 !== '--' && proj26 >= f25 ? '#22c55e' : '#94a3b8';
     setEl('k1lbl', '2024年実績'); setEl('k1val', String(f24)); setEl('k1sub', '億円'); document.getElementById('k1val').style.color = '';
     setEl('k2lbl', '2025年実績'); setEl('k2val', String(f25)); setEl('k2sub', '億円'); document.getElementById('k2val').style.color = '';
-    setEl('k3lbl', '前年差');     setEl('k3val', (delta >= 0 ? '+' : '') + delta.toFixed(1)); setEl('k3sub', '億円');
-    document.getElementById('k3val').style.color = dcol;
-    setEl('m1n', '前年比');  setEl('m1v', pctYY + '%', dcol);
-    setEl('m2n', 'トレンド'); setEl('m2v', delta >= 0 ? '▲ 増収' : '▼ 減収', dcol);
-    setEl('m3n', ''); setEl('m3v', '');
-    setEl('m4n', ''); setEl('m4v', '');
+    setEl('k3lbl', '2026年見込'); setEl('k3val', String(proj26)); setEl('k3sub', '億円');
+    document.getElementById('k3val').style.color = p26col;
+    setEl('m1n', '前年比');        setEl('m1v', pctYY + '%', dcol);
+    setEl('m2n', 'トレンド');      setEl('m2v', delta >= 0 ? '▲ 増収' : '▼ 減収', dcol);
+    setEl('m3n', '全社シェア');    setEl('m3v', share25 + '%', '#3b82f6');
+    setEl('m4n', '展開ブランド数'); setEl('m4v', brandCnt + ' 種', '#64748b');
     setEl('glabel', name + ' 前年比成長');
     setElHTML('gsub2', '2024年 <b style="color:#1e293b;">' + f24 + '億円</b>');
     setElHTML('gnum', f25 + '<span style="font-size:11px;font-weight:400;color:#94a3b8;">億</span>');
@@ -691,17 +754,17 @@ document.getElementById('fltSeg').addEventListener('change', function(){
   this.className='fs'+(this.value?' on':'');
   renderSegment(); renderBrand(); renderBrandRank();
 });
-// ── フィルター：ブランドはチャート・ランキングに連動 ──
+// ── フィルター：ブランドはドリルダウンに連動 ──
 document.getElementById('fltBrand').addEventListener('change', function(){
-  F.brand=this.value;
-  this.className='fs'+(this.value?' on':'');
-  renderBrand(); renderBrandRank();
+  const val = this.value;
+  F.brand = val; this.className = 'fs' + (val ? ' on' : '');
+  if (val) { applyDrill('brand', val); } else { clearDrill(); }
 });
-// ── フィルター：地域はチャートに連動 ──
+// ── フィルター：地域はドリルダウンに連動 ──
 document.getElementById('fltReg').addEventListener('change', function(){
-  F.region=this.value;
-  this.className='fs'+(this.value?' on':'');
-  renderRegion();
+  const val = this.value;
+  F.region = val; this.className = 'fs' + (val ? ' on' : '');
+  if (val) { applyDrill('region', val); } else { clearDrill(); }
 });
 
 document.querySelectorAll('.tab').forEach(tab=>{
@@ -723,9 +786,11 @@ function initAll(){
   C.segment      = echarts.init(document.getElementById('chartSegment'));
   C.gauge        = echarts.init(document.getElementById('chartGauge'));
   C.summaryBrand = echarts.init(document.getElementById('chartSummaryBrand'));
+  C.monthly      = echarts.init(document.getElementById('chartMonthly'));
   renderTrend(); renderBrand(); renderBrandRank();
   renderIP(); renderRegion(); renderSegment();
   renderGauge(); renderSummaryBrand(); renderSummaryDrivers();
+  renderMonthly(); initScenario();
   bindClicks();
 }
 
@@ -792,7 +857,7 @@ function applyDrill(type, name) {
       legend: {data: ['実績','計画','2027/28年目標', name]},
       series: [{}, {}, {},
         {name, type:'line',
-         data: [null, tr[1]??null, tr[2]??null, tr[3]??null, null, null],
+         data: [null, tr[0]??null, tr[1]??null, tr[2]??null, tr[3]??null, tr[4]??null, null, null],
          lineStyle:{color:col, width:2.5, type:'dashed'},
          itemStyle:{color:col}, symbol:'circle', symbolSize:6,
          label:{show:true, position:'top', fontSize:9, fontWeight:700, color:col,
@@ -915,6 +980,12 @@ function applyDrill(type, name) {
 
 function clearDrill() {
   SEL.type = ''; SEL.name = '';
+  // フィルター状態リセット
+  F.brand = ''; F.region = ''; F.segment = '';
+  ['fltBrand', 'fltReg', 'fltSeg'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value = ''; el.className = 'fs'; }
+  });
   try { document.getElementById('drillBadge').style.display = 'none'; } catch(_){}
   try { const t=document.getElementById('tagReg'); if(t){t.textContent='全地域';t.className='ctag';} } catch(_){}
   renderTrend(); renderBrand(); renderBrandRank();
@@ -948,6 +1019,107 @@ function bindClicks() {
   ['chartBrand','chartIP','chartRegion','chartSegment','chartSummaryBrand'].forEach(id => {
     document.getElementById(id).style.cursor = 'pointer';
   });
+}
+
+// ── エクスポート ──
+function exportPDF() { window.print(); }
+
+// ── FY26 月次データ（CY2026: 1〜6月確定, 7〜12月計画）──
+const MONTHLY_FY26 = {
+  labels:    ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
+  actual:    [43.5, 37.8, 29.6, 22.0, 19.5, 15.3, null, null, null, null, null, null],
+  projected: [null, null, null, null, null, null, 14.5, 18.0, 15.5, 14.0, 11.5,  8.3],
+};
+// 1〜6月合計 = 167.7億（DATA.sales.actual[5]と一致），7〜12月計画合計 = 81.8億，年間計画 ≈ 249.5億
+
+function renderMonthly() {
+  if (!C.monthly) return;
+  const planPerMonth = +(250 / 12).toFixed(1);
+  C.monthly.setOption({
+    grid: {top:28, right:16, bottom:28, left:44},
+    legend: {top:0, right:0, textStyle:{fontSize:9}, itemWidth:10, itemHeight:7,
+      data:['確定受注','H2計画']},
+    xAxis: {type:'category', data:MONTHLY_FY26.labels,
+      axisLabel:{fontSize:9, color:'#374151'}, axisLine:{lineStyle:{color:'#e2e8f0'}}},
+    yAxis: {type:'value', name:'億円', nameTextStyle:{fontSize:9, color:'#94a3b8'},
+      axisLabel:{fontSize:9, color:'#94a3b8'}, splitLine:{lineStyle:{color:'#f1f5f9'}}},
+    tooltip: {trigger:'axis', ...TOOLTIP,
+      formatter: params => {
+        const lbl = params[0]?.axisValue;
+        let s = `<b>2026年 ${lbl}</b><br/>`;
+        params.forEach(p => { if (p.value != null) s += `${p.marker}${p.seriesName}: <b>${p.value}億</b><br/>`; });
+        return s;
+      }
+    },
+    series:[
+      {name:'確定受注', type:'bar', barMaxWidth:22,
+       data: MONTHLY_FY26.actual.map(v => ({
+         value: v, itemStyle:{color: v != null ? '#2563eb' : 'transparent', borderRadius:[2,2,0,0]}
+       })),
+       markLine:{silent:true, lineStyle:{color:'#94a3b8', type:'dashed', width:1},
+         label:{formatter:'月平均目標', fontSize:8, color:'#94a3b8'},
+         data:[{yAxis: planPerMonth}]}
+      },
+      {name:'H2計画', type:'bar', barMaxWidth:22,
+       data: MONTHLY_FY26.projected.map(v => ({
+         value: v, itemStyle:{color: v != null ? '#bfdbfe' : 'transparent', borderRadius:[2,2,0,0]}
+       }))
+      },
+    ]
+  });
+}
+
+// ── シナリオシミュレーター ──
+function initScenario() {
+  const container = document.getElementById('simRows');
+  if (!container) return;
+  container.innerHTML = '';
+  const brands = DATA.brands.filter(b => b.fy28 != null);
+  brands.forEach((b, i) => {
+    const needed = b.fy25 > 0 ? (Math.pow(b.fy28 / b.fy25, 1/3) - 1) * 100 : 0;
+    const def = Math.max(0, Math.min(60, Math.round(needed)));
+    const nm = b.name.length > 7 ? b.name.slice(0, 6) + '…' : b.name;
+    const row = document.createElement('div');
+    row.className = 'scrow'; row.dataset.idx = i;
+    row.innerHTML = `<span class="sclb2" title="${b.name}">${nm}</span>
+      <input type="range" class="scrng" min="0" max="60" step="1" value="${def}" oninput="updateScenario()">
+      <span class="scval" id="sval${i}">${def}%</span>
+      <span class="scprj" id="sproj${i}">--億</span>`;
+    container.appendChild(row);
+  });
+  updateScenario();
+}
+
+function updateScenario() {
+  const container = document.getElementById('simRows');
+  if (!container) return;
+  const brands = DATA.brands.filter(b => b.fy28 != null);
+  let total = 0;
+  brands.forEach((b, i) => {
+    const row = container.querySelector(`[data-idx="${i}"]`);
+    if (!row) return;
+    const rate = parseFloat(row.querySelector('input').value) / 100;
+    const proj = +(b.fy25 * Math.pow(1 + rate, 3)).toFixed(1);
+    total += proj;
+    const vEl = document.getElementById('sval' + i);
+    const pEl = document.getElementById('sproj' + i);
+    if (vEl) vEl.textContent = Math.round(rate * 100) + '%';
+    if (pEl) {
+      pEl.textContent = proj + '億';
+      pEl.style.color = proj >= (b.fy28 || 0) ? '#22c55e' : '#f97316';
+    }
+  });
+  const door = DATA.brands.find(b => b.fy28 == null);
+  if (door) total += door.fy25;
+  total = Math.round(total * 10) / 10;
+  const pct = Math.round(total / 400 * 100);
+  const col = pct >= 100 ? '#22c55e' : pct >= 75 ? '#f97316' : '#ef4444';
+  const tEl = document.getElementById('simTotal');
+  const pEl = document.getElementById('simPct');
+  const bEl = document.getElementById('simBar');
+  if (tEl) tEl.innerHTML = `${total}<span style="font-size:12px;font-weight:400;color:#94a3b8;"> 億円</span>`;
+  if (pEl) { pEl.textContent = pct + '%'; pEl.style.color = col; }
+  if (bEl) { bEl.style.width = Math.min(pct, 100) + '%'; bEl.style.background = col; }
 }
 
 document.addEventListener('DOMContentLoaded', initAll);
