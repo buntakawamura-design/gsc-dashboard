@@ -1,7 +1,8 @@
+# データ原本・社内資料は公開リポジトリ（GitHub Pages）に含めない
+data/
+docs/
 *.xlsx
 *.pptx
 *.jpg
 *.png
-議事録*.md
-作業ログ.md
 .DS_Store
